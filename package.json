@@ -1,0 +1,40 @@
+{
+    "name": "earth",
+    "description": "Earth",
+    "version": "0.0.1",
+    "private": true,
+    "author": {
+        "name": "Cameron Beccario",
+        "email": "cambecc@nullschool.net"
+    },
+    "scripts": {
+        "test": "No test specified",
+        "build": "mkdir -p ./bin & rm ./bin/* & pkg dev-server.js --out-path ./bin/",
+        "start": "node dev-server.js"
+    },
+    "bin": "dev-server.js",
+    "pkg": {
+        "assets": [
+            "public/**/*"
+        ],
+        "output": "dist"
+    },
+    "homepage": "https://github.com/cambecc/earth",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/cambecc/earth.git"
+    },
+    "engine": "node >= 0.10.21",
+    "dependencies": {
+        "axios": "^1.1.3",
+        "express": "3.4.4",
+        "grib2json": "^1.0.2",
+        "mkdirp": "0.3.5",
+        "swig": "1.2.2",
+        "when": "2.6.0"
+    },
+    "devDependencies": {
+        "grunt": "~0.4.1",
+        "grunt-contrib-jshint": "~0.7.1"
+    }
+}
