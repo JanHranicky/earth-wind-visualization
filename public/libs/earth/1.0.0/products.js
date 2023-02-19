@@ -80,9 +80,11 @@ var products = function() {
                     xmlHttp.open( "GET", constructDownloadUrl(this.paths), false );
                     xmlHttp.send( null );
 
+
+                    console.log(xmlHttp.status);
                     console.log(xmlHttp.responseText);
                 }
-                //TODO implement download
+
                 return when.map(this.paths, µ.loadJson).then(function(files) {
                     return cancel.requested ? null : _.extend(me, buildGrid(me.builder.apply(me, files)));
                 });
@@ -118,8 +120,9 @@ var products = function() {
      * to jump is determined by the step. Steps of ±1 move in 3-hour jumps, and steps of ±10 move in 24-hour jumps.
      */
     function gfsStep(date, step) {
-        var offset = (step > 1 ? 8 : step < -1 ? -8 : step) * 3, adjusted = new Date(date);
-        adjusted.setHours(adjusted.getHours() + offset);
+        var adjusted = new Date(date);
+        //var offset = (step > 1 ? 8 : step < -1 ? -8 : step) * 3, adjusted = new Date(date);
+        adjusted.setHours(adjusted.getHours() + step);
         return adjusted;
     }
 

@@ -20,7 +20,7 @@ module.exports = function() {
      * @returns 
      */
     function constructRequestUrl(date, time,level) {
-        return "https://nomads.ncep.noaa.gov/cgi-bin/filter_fnl.pl?file=gdas.t00z.pgrb2.1p00.f000&lev_"+level+"_mb=on&var_UGRD=on&var_VGRD=on&dir=%2Fgdas."+date+"%2F"+time+"%2Fatmos";
+        return "https://nomads.ncep.noaa.gov/cgi-bin/filter_fnl.pl?file=gdas.t"+time+"z.pgrb2.1p00.f000&lev_"+level+"_mb=on&var_UGRD=on&var_VGRD=on&dir=%2Fgdas."+date+"%2F"+time+"%2Fatmos";
         //return "https://nomads.ncep.noaa.gov/cgi-bin/filter_fnl.pl?file=gdas.t00z.pgrb2.1p00.anl&lev_"+level+"_mb=on&var_UGRD=on&var_VGRD=on&dir=%2Fgdas."+date+"%2F"+time+"%2Fatmos";
     }
 
@@ -58,6 +58,7 @@ module.exports = function() {
         const fs = require('fs');
 
         var downloadUrl = constructRequestUrl(date,time.slice(0,2),level);
+        console.log(downloadUrl);
 
         const request = https.get(downloadUrl, function(response) {
             console.log(response.statusCode);

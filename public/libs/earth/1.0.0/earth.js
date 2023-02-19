@@ -1073,10 +1073,10 @@
         });
 
         // Add event handlers for the time navigation buttons.
-        d3.select("#nav-backward-more").on("click", navigate.bind(null, -10));
-        d3.select("#nav-forward-more" ).on("click", navigate.bind(null, +10));
-        d3.select("#nav-backward"     ).on("click", navigate.bind(null, -1));
-        d3.select("#nav-forward"      ).on("click", navigate.bind(null, +1));
+        d3.select("#nav-backward-more").on("click", navigate.bind(null, -24));
+        d3.select("#nav-forward-more" ).on("click", navigate.bind(null, +24));
+        d3.select("#nav-backward"     ).on("click", navigate.bind(null, -6));
+        d3.select("#nav-forward"      ).on("click", navigate.bind(null, +6));
         d3.select("#nav-now").on("click", function() { configuration.save({date: "current", hour: ""}); });
 
         d3.select("#option-show-grid").on("click", function() {
