@@ -33,7 +33,7 @@ module.exports = function() {
      * @returns filepath for the downloaded file
      */
     function createFolder(date,time,level) {
-        const FOLDER_PATH = './public/data/weather/';
+        const FOLDER_PATH = './data/weather/';
         var year = date.substring(0,4); //date is given as YYYYMMDD format string, month will always be at position 0 - 4
         var month = date.substring(4,6); //date is given as YYYYMMDD format string, month will always be at position 4 - 6
         var day = date.substring(6,8); //date is given as YYYYMMDD format string, month will always be at position 6 - 8
@@ -101,22 +101,30 @@ module.exports = function() {
         args.push(jsonPath); //out file 
         args.push(filename); //source file
 
-
         var exec = require('child_process').execFile;
-        exec(GRIB_PATH, args, function(err, data) {  
-            console.log(err)
-            /*
-            fs.writeFile(jsonPath, data.toString(), function(err) {
+        exec(GRIB_PATH, args, function(err, data) { 
+            if (err) {
+                console.log(err);
+                res.status(500);
+                res.send("Error while converting the data file to JSON. " + err);
+            }
+        }).on("exit", (code) => {
+            //res.status(200);
+            //res.send('File was successfuly downloaded and saved to disk');
+
+            fs.readFile(jsonPath, function(err,data)
+            {
                 if(err) {
-                    console.log(err);
+                    console.log('Err while reading saved JSON file ' + err);
                     res.status(500);
-                    res.send("There was an converting the downloaded file to JSON: " + err);
+                    res.send('Err while reading saved JSON file ' + err);
                 }
-    
-            }); 
-            */
-            res.status(200);
-            res.send('File was successfuly downloaded and saved to disk');
+                else {
+                    console.log('OK');
+                    res.status(200);
+                    res.send(data.toString());
+                }
+            });
         });
     }
 

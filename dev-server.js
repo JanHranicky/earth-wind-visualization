@@ -60,7 +60,7 @@ const path = require('path');
 app.use(cacheControl());
 app.use(express.compress({filter: compressionFilter}));
 app.use(logger());
-app.use(express.static("public"));
+app.use(express.static("./public"));
 
 
 //const GRIB2JSON_PATH = './public/libs/grib2json/bin/grib2json';
@@ -144,6 +144,35 @@ app.get('/download', (req, res) => {
     //sconvertGrib2Json(TEST_FOLDER_PATH+TEST_FILE_NAME)
     //nc.getData(req,res);
 });
+
+app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
+    console.log('HERE \n\n\n\n\n');
+    console.log(req.params);
+
+    if (req.params.month > 12 || req.params.day > 31) {
+        res.status(400);
+        res.send('Bad request. Day or month out of bounds.');
+    }
+
+    var path = "/data/weather/" + req.params.year + "/" + req.params.month + "/" + req.params.day + "/" + req.params.file; 
+
+    console.log('Trying to load ' + process.cwd()+path);
+    fs.readFile(process.cwd()+path, function(err,data)
+            {
+                if(err) {
+                    console.log('Err while sending data file ' + err);
+                    res.status(500);
+                    res.send('Err while sending data file ' + err);
+                }
+                else {
+                    console.log('OK');
+                    res.status(200);
+                    res.send(data.toString());
+                }
+            });
+});
+
+
 
 // Using a function to set default app path
 function getDir() {

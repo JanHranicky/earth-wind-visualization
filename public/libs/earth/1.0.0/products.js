@@ -73,6 +73,7 @@ var products = function() {
                 console.log('products: load');
                 console.log('products: this.paths ' + this.paths);
 
+                /*
                 if (!fileExists(this.paths)) {
                     console.log(this.paths + ' does not exist. Attemting download');
                     
@@ -80,10 +81,21 @@ var products = function() {
                     xmlHttp.open( "GET", constructDownloadUrl(this.paths), false );
                     xmlHttp.send( null );
 
+                    if (xmlHttp.status != 200) {
+                        var d = when.defer();
+                        return d.reject({status: 404, message: "File " + this.paths + " is not present on NOMAD's server", resource: this.paths});
+                    }
 
-                    console.log(xmlHttp.status);
-                    console.log(xmlHttp.responseText);
+                    var file = [JSON.parse(xmlHttp.responseText)]; 
+                    //TODO divne stridani casu
+                    //TODO statusy pri neexistujicim datovem souboru
+                    //TODO statusy pri stahovani dat 
+                    //TODO aby stranka reagovala pri neuspesnem loadu souboru
+
+                    console.log(file);
+                    return cancel.requested ? null : _.extend(me, buildGrid(me.builder.apply(me, file)));
                 }
+                */
 
                 return when.map(this.paths, µ.loadJson).then(function(files) {
                     return cancel.requested ? null : _.extend(me, buildGrid(me.builder.apply(me, files)));
