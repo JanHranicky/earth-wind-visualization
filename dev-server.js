@@ -243,4 +243,4 @@ function getDir() {
     }
 }
 
-//open("http://localhost:"+port);
+open("http://localhost:"+port);
