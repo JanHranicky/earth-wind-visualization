@@ -81,6 +81,114 @@ app.get('/download', (req, res) => {
     nc.downloadAndSavaNomadData(parsedQs.date,parsedQs.time,parsedQs.level,res);
 });
 
+app.get('/data/weather/current/:file', (req, res) => {
+    console.log("Trying to load current file data file");
+    console.log(req.params.file);
+
+    //if current file exists, check the date and:
+    //  if it is corrent send the file
+    //  if it is old, try:
+    //      to look for new file on disk, if found send it
+    //          if not try to download new datafile based on current datetime
+    //              if not successfull, try again with older time 
+    //var obj = JSON.parse(fs.readFileSync('file', 'utf8'));
+    var path = './data/weather/current/' + req.params.file;
+    var level = req.params.file.split('-')[3].replace('hPa','');
+
+    var supposedCurrentPath = pathFromDate(level);
+
+    try {
+        console.log('File path ' + supposedCurrentPath);
+        if (fs.existsSync(supposedCurrentPath)) {
+            console.log(supposedCurrentPath +' File exists. Sending it.');
+
+            res.status(200);
+            res.send(fs.readFileSync(supposedCurrentPath, 'utf8').toString());        
+        } else { //download current date
+            //nc.downloadAndSavaNomadData()
+            nc.tryToDownloadCurrentData("20230227","0000","250",5,res);
+        }
+    } catch (e) {
+        console.log("Error reading current file " + req.params.file + " from disk. " + e);
+
+        res.status(500);
+        res.send("Error reading current file " + req.params.file + " from disk. " + e);
+    }
+});
+
+
+/**
+ * Returns NOMAD's time interval based on given time
+ * @param {*} time 
+ * @returns 
+ */
+function getIntervalFromTimeValue(time) {
+    if (time < 6) {
+        return "0000";
+    } else if (time < 12) {
+        return "0600";
+    } else if (time < 18) {
+        return "1200";
+    }
+    return "1800";
+}
+
+/**
+ * Returns path to level's current .json datafile according to given date, if date is null current datetime is used 
+ * @param {*} date 
+ * @param {*} level 
+ */
+function pathFromDate(level,date = null) {
+    if (!date) date = new Date();
+    var year = date.getFullYear().toString();
+    var month = date.getMonth().toString().length == 1 ? "0" + (date.getMonth() + 1).toString() : (date.getMonth() + 1).toString();
+    var day = date.getDate().toString().length == 1 ? "0" + date.getDate().toString() : date.getDate().toString();
+
+    var time = getIntervalFromTimeValue(parseInt(date.getHours()));
+
+    var path = "./data/weather/";
+    path += year + "/" + month + "/" + day + "/" + time+"-wind-isobaric-"+level+"hPa-gfs-1.0.json";
+
+    return path;
+}
+
+/**
+ * Calculates hour difference between two dates
+ * @param {*} date1 
+ * @param {*} date2 
+ * @returns hour difference
+ */
+function hourDiff(date1,date2) {
+    return Math.abs(date1 - date2) / 36e5;
+}
+
+/**
+ * Returns true, if the current data file with given path is up-to-date
+ * @param {*} path 
+ * @param {*} res 
+ * @returns 
+ */
+function checkCurrentFileTopicality(path, res) {
+    
+    try {
+        var currentDataFileObj = JSON.parse(fs.readFileSync(path, 'utf8'));
+        if (currentDataFileObj[0]) {
+            var refDate = new Date(currentDataFileObj[0].header.refTime);
+            var now = new Date();
+
+            return hourDiff(refDate,now) < 6;
+        }
+    } catch (e) {
+        console.log('Error. Trying to read current data ' + path + ' file from disk resulted in error: ' + e);
+
+        res.status(500);
+        res.send('Error. Trying to read current data ' + path + ' file from disk resulted in error: ' + e);
+    }
+
+    return false;
+}
+
+
 app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
     console.log(req.params);
 
@@ -97,11 +205,13 @@ app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
             fs.readFile(process.cwd()+path, function(err,data) {
                 if(err) {
                     console.log('Err while sending data file ' + err);
+
                     res.status(500);
                     res.send('Err while sending data file ' + err);
                 }
                 else {
                     console.log('OK');
+
                     res.status(200);
                     res.send(data.toString());
                 }
@@ -122,22 +232,6 @@ app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
         res.status(500);
         res.send('Err while sending data file ' + err);
     }
-
-    /**
-     fs.readFile(process.cwd()+path, function(err,data) {
-         
-         if(err) {
-             console.log('Err while sending data file ' + err);
-             res.status(500);
-             res.send('Err while sending data file ' + err);
-            }
-        else {
-            console.log('OK');
-            res.status(200);
-            res.send(data.toString());
-        }
-    });
-    */
 });
 
 // Using a function to set default app path

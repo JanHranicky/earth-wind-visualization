@@ -45,7 +45,8 @@ module.exports = function() {
     /**
      * Tries to download data based on date, time and level form NOMAD's server.
      * If the download is sucessful the data is parsed into JSON format using grib2json utility 
-     * and saved into a folder ./public/data/[YEAR]/[DAY]/[TIME]-wind-isobaric-[LEVEL]hPa-gfs-1.0.json
+     * and saved into a folder ./public/data/[YEAR]/[DAY]/[TIME]-wind-isobaric-[LEVEL]hPa-gfs-1.0.json)
+     * This function is called in a GET request to download file and the result is send via the res object
      * @param {String} date 
      * @param {String} time 
      * @param {String} level 
@@ -77,6 +78,96 @@ module.exports = function() {
                 
             } else {
                 res.status(response.statusCode == 404 ? 404 : 500);
+                res.send("Error while sending Nomad request. Nomad responded with code: "+response.statusCode);
+            }
+        });
+    }
+
+    /**
+     * Converts Date into YYYYMMDD format, if not date is provided the format is returned for today's date
+     * @param {Date} date 
+     */
+    function toYYYYMMDD(date=null) {
+        if (!date) date = new Date();
+        else date = new Date(date);
+        var year = date.getFullYear().toString();
+        var month = date.getMonth().toString().length == 1 ? "0" + (date.getMonth() + 1).toString() : (date.getMonth() + 1).toString();
+        var day = date.getDate().toString().length == 1 ? "0" + date.getDate().toString() : date.getDate().toString();
+
+        return year+month+day;
+    }
+
+    /**
+     * Returns the previous timestep 0000->0600->1200->1800->0000->...
+     * @param {*} dateString 
+     * @param {*} time 
+     * @returns 
+     */
+    function getPreviousStep(dateString,time) {
+        switch (time) {
+            case "0000":
+                var year = dateString.substring(0,4);
+                var month = dateString.substring(4,6);
+                var day = dateString.substring(6,8);
+
+                var date = new Date(year, month-1, day);
+                console.log('New date',date);
+
+                return {date: toYYYYMMDD(date.setDate(date.getDate() - 1)), time: "1800"};
+
+            case "1800": return {date: dateString, time: "1200"};
+            case "1200": return {date: dateString, time: "0600"};
+            default: return {date: dateString, time: "0000"};
+        }
+    }
+
+    /**
+     * Tries to download data based on date, time and level form NOMAD's server.
+     * If the download is sucessful the data is parsed into JSON format using grib2json utility 
+     * and saved into a folder ./public/data/[YEAR]/[DAY]/[TIME]-wind-isobaric-[LEVEL]hPa-gfs-1.0.json
+     * If the download failes the function tries to download older data up to cnt times. 
+     * @param {String} date 
+     * @param {String} time 
+     * @param {String} level 
+     * @param {Int} cnt 
+     * @param {*} res Express response object of the /download endpoint request 
+     */
+    function tryToDownloadCurrentData(date,time,level,cnt,res) { 
+        console.log('Trying to download current data. try num. ' + cnt);
+        if (cnt == 0) {
+            res.status(500);
+            res.send("Error while trying to download current data.");
+        }
+
+        const https = require('https');
+        const fs = require('fs');
+
+        var downloadUrl = constructRequestUrl(date,time.slice(0,2),level);
+        console.log(downloadUrl);
+
+        const request = https.get(downloadUrl, function(response) {
+            console.log(response.statusCode);
+            if (response.statusCode == 200) {
+                const dest = createFolder(date,time,level); //destination of the .anl file
+                const file = fs.createWriteStream(dest); 
+                response.pipe(file);
+
+                // after download completed close filestream
+                file.on("finish", () => {
+                    file.close();
+                    toJSON(dest,res);
+                }).on('error', function(err) { // Handle errors
+                    fs.unlink(dest); // Delete the file async. (But we don't check the result)
+                    res.status(500);
+                    res.send("Error while saving the file to the disk: " + err.message);
+                });
+                
+            } else if (response.statusCode == 404) { //Current data is not yet published, Download 6hr older data
+                var dateTimeObj = getPreviousStep(date,time);
+                
+                tryToDownloadCurrentData(dateTimeObj.date,dateTimeObj.time,level,cnt--,res);
+            } else {
+                res.status(500);
                 res.send("Error while sending Nomad request. Nomad responded with code: "+response.statusCode);
             }
         });
@@ -133,6 +224,7 @@ module.exports = function() {
     }
     
     return {
-        downloadAndSavaNomadData: downloadAndSavaNomadData
+        downloadAndSavaNomadData: downloadAndSavaNomadData,
+        tryToDownloadCurrentData: tryToDownloadCurrentData
     };
 }();
