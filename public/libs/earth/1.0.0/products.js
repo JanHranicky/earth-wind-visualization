@@ -48,11 +48,16 @@ var products = function() {
             var date = urlParts[3] + urlParts[4] + urlParts[5];
 
             var fileNameParts = urlParts[6].split('-');
-            
-            var time = fileNameParts[0];
-            var level = fileNameParts[3].slice(0, -3); //removing hpa unit from the level value
+            console.log(fileNameParts);
 
-            var downloadUrl = window.location.origin + '/download?date='+date+'&time='+time+'&level='+level;
+            var time = fileNameParts[0];
+
+            var downloadUrl = window.location.origin;
+
+            const PRESSURE_UNIT = "hPa";
+            var level = fileNameParts[3].includes(PRESSURE_UNIT) ? fileNameParts[3].replace(PRESSURE_UNIT,'') : fileNameParts[3];
+            downloadUrl += '/download?date='+date+'&time='+time+'&level='+level;
+        
             console.log(fileNameParts);
             console.log(downloadUrl);
 
@@ -73,7 +78,6 @@ var products = function() {
                 console.log('products: load');
                 console.log('products: this.paths ' + this.paths);
 
-                /*
                 if (!fileExists(this.paths)) {
                     console.log(this.paths + ' does not exist. Attemting download');
                     
@@ -95,7 +99,7 @@ var products = function() {
                     console.log(file);
                     return cancel.requested ? null : _.extend(me, buildGrid(me.builder.apply(me, file)));
                 }
-                */
+ 
 
                 return when.map(this.paths, µ.loadJson).then(function(files) {
                     return cancel.requested ? null : _.extend(me, buildGrid(me.builder.apply(me, files)));

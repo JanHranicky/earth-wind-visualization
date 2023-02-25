@@ -146,7 +146,6 @@ app.get('/download', (req, res) => {
 });
 
 app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
-    console.log('HERE \n\n\n\n\n');
     console.log(req.params);
 
     if (req.params.month > 12 || req.params.day > 31) {
