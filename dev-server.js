@@ -9,7 +9,6 @@ console.log(new Date().toISOString() + " - Starting");
 
 var util = require("util");
 var nc = require("./public/libs/earth/1.0.0/nomadsClient.js");
-var http = require('http');
 const url = require('url');
 const querystring = require('querystring');
 
@@ -48,9 +47,7 @@ function logger() {
 //var port = process.argv[2];
 const port = process.env.PORT || 3000;
 var express = require("express");
-const https = require("https");
 const fs = require("fs");
-const {default: grib2json} = require("grib2json");
 var app = express();
 
 const Server = require('http').Server;
@@ -62,21 +59,6 @@ app.use(express.compress({filter: compressionFilter}));
 app.use(logger());
 app.use(express.static("./public"));
 
-
-//const GRIB2JSON_PATH = './public/libs/grib2json/bin/grib2json';
-const GRIB2JSON_PATH = './utils/grib2json-0.8.0-SNAPSHOT/grib2json.exe';
-function convertGrib2Json(file) {
-    var grib2json = require('grib2json').default;
-    
-    grib2json(file,{
-        scriptPath: GRIB2JSON_PATH
-    }, function (err, json) {
-        //console.log(json);
-        return json;
-    })
-}
-
-
 server.listen(port, () => console.log("Server at " + port));
 app.use('/', express.static(getDir() + '/public'));
 
@@ -85,29 +67,6 @@ app.get('/', function(req, res) {
 });
 
 app.get('/download', (req, res) => {
-    // const url = "https://nomads.ncep.noaa.gov/cgi-bin/filter_fnl.pl?file=gdas.t00z.pgrb2.1p00.f000&var_UGRD=on&var_VGRD=on&dir=%2Fgdas.20221120%2F00%2Fatmos";
-    //
-    // const file = fs.createWriteStream("random.data");
-    // https.get(url, function(response) {
-    //     console.log(response.statusCode);
-    //     if (response.statusCode == 200) {
-    //         response.pipe(file);
-    //         // after download completed close filestream
-    //         file.on("finish", () => {
-    //             file.close();
-    //             console.log("Download Completed");
-    //             grib2json("random.data",{
-    //                 scriptPath: GRIB2JSON_PATH
-    //             }, function (err, json) {
-    //                 //console.log(json);
-    //                 res.send(json);
-    //             })
-    //             //res.send(json);
-    //             //console.log(json);
-    //         });
-    //     }
-    // });
-    //console.log('parameters=' +req.query);
     var parsedUrl = url.parse(req.url);
     var parsedQs = querystring.parse(parsedUrl.query);
     
@@ -118,31 +77,6 @@ app.get('/download', (req, res) => {
     }
     
     nc.downloadAndSavaNomadData(parsedQs.date,parsedQs.time,parsedQs.level,res);
-    return;
-    
-    const TEST_FOLDER_PATH = './test_data/';
-    const TEST_FILE_NAME = 'gdas.t00z.pgrb2.1p00.f000';
-    const GRIB_PATH = './utils/grib2json.exe';
-    const ARGUMENTS = ['-c','./test_data/gdas.t00z.pgrb2.1p00.f000'];
-    //grib2json -d -n -o current-wind-surface-level-gfs-1.0.json gfs.t00z.pgrb2.1p00.f000
-    //[ '-c', './test_data/gdas.t00z.pgrb2.1p00.f000' ]
-    var exec = require('child_process').execFile;
-    exec(GRIB_PATH, ARGUMENTS, function(err, data) {  
-        console.log(err)
-        fs.writeFile("./test_data/out.json", data.toString(), function(err) {
-            if(err) {
-                console.log(err);
-                res.status(500);
-                res.send("There was an error downloading the file. See console log for detail.");
-            }
-
-            res.status(200);
-            res.send('File was successfuly downloaded and saved to disk');
-        }); 
-    });
-    
-    //sconvertGrib2Json(TEST_FOLDER_PATH+TEST_FILE_NAME)
-    //nc.getData(req,res);
 });
 
 app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
@@ -171,8 +105,6 @@ app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
             });
 });
 
-
-
 // Using a function to set default app path
 function getDir() {
     if (process.pkg) {
@@ -180,8 +112,4 @@ function getDir() {
     } else {
         return path.join(require.main ? require.main.path : process.cwd());
     }
-}
-
-function convertGrib2Json() {
-
 }
