@@ -76,7 +76,7 @@ module.exports = function() {
                 });
                 
             } else {
-                res.status(500);
+                res.status(response.statusCode == 404 ? 404 : 500);
                 res.send("Error while sending Nomad request. Nomad responded with code: "+response.statusCode);
             }
         });

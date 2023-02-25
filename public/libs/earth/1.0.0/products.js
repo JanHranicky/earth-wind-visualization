@@ -78,6 +78,7 @@ var products = function() {
                 console.log('products: load');
                 console.log('products: this.paths ' + this.paths);
 
+                /** 
                 if (!fileExists(this.paths)) {
                     console.log(this.paths + ' does not exist. Attemting download');
                     
@@ -99,7 +100,7 @@ var products = function() {
                     console.log(file);
                     return cancel.requested ? null : _.extend(me, buildGrid(me.builder.apply(me, file)));
                 }
- 
+                */
 
                 return when.map(this.paths, µ.loadJson).then(function(files) {
                     return cancel.requested ? null : _.extend(me, buildGrid(me.builder.apply(me, files)));

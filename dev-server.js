@@ -7,10 +7,17 @@
 console.log("============================================================");
 console.log(new Date().toISOString() + " - Starting");
 
+const open = require('open');
 var util = require("util");
 var nc = require("./public/libs/earth/1.0.0/nomadsClient.js");
 const url = require('url');
+var express = require("express");
+const fs = require("fs");
 const querystring = require('querystring');
+const Server = require('http').Server;
+const path = require('path');
+
+const port = process.env.PORT || 3000;
 
 /**
  * Returns true if the response should be compressed.
@@ -44,24 +51,19 @@ function logger() {
         '":user-agent" :referrer :req[cf-ray] :req[accept-encoding]\\n:request-all\\n\\n:response-all\\n');
 }
 
-//var port = process.argv[2];
-const port = process.env.PORT || 3000;
-var express = require("express");
-const fs = require("fs");
 var app = express();
-
-const Server = require('http').Server;
 const server = new Server(app);
-const path = require('path');
 
 app.use(cacheControl());
 app.use(express.compress({filter: compressionFilter}));
 app.use(logger());
 app.use(express.static("./public"));
 
-server.listen(port, () => console.log("Server at " + port));
-app.use('/', express.static(getDir() + '/public'));
+server.listen(port, () =>  {
+    console.log("Server at " + port);
+});
 
+app.use('/', express.static(getDir() + '/public'));
 app.get('/', function(req, res) {
     res.sendFile(getDir() + '/public/index.html');
 });
@@ -88,10 +90,11 @@ app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
     }
 
     var path = "/data/weather/" + req.params.year + "/" + req.params.month + "/" + req.params.day + "/" + req.params.file; 
-
     console.log('Trying to load ' + process.cwd()+path);
-    fs.readFile(process.cwd()+path, function(err,data)
-            {
+
+    try {
+        if (fs.existsSync(path)) {
+            fs.readFile(process.cwd()+path, function(err,data) {
                 if(err) {
                     console.log('Err while sending data file ' + err);
                     res.status(500);
@@ -103,6 +106,38 @@ app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
                     res.send(data.toString());
                 }
             });
+        } else {
+            var date = req.params.year+req.params.month+req.params.day;
+            var fileNameParts = req.params.file.split("-");
+
+            var time = fileNameParts[0];
+            const PRESSURE_UNIT = "hPa";
+            var level = fileNameParts[3].includes(PRESSURE_UNIT) ? fileNameParts[3].replace(PRESSURE_UNIT,'') : fileNameParts[3];
+
+            nc.downloadAndSavaNomadData(date,time,level,res);
+        }
+    } catch(err) {
+        console.log('Err while sending data file ' + err);
+
+        res.status(500);
+        res.send('Err while sending data file ' + err);
+    }
+
+    /**
+     fs.readFile(process.cwd()+path, function(err,data) {
+         
+         if(err) {
+             console.log('Err while sending data file ' + err);
+             res.status(500);
+             res.send('Err while sending data file ' + err);
+            }
+        else {
+            console.log('OK');
+            res.status(200);
+            res.send(data.toString());
+        }
+    });
+    */
 });
 
 // Using a function to set default app path
@@ -113,3 +148,5 @@ function getDir() {
         return path.join(require.main ? require.main.path : process.cwd());
     }
 }
+
+//open("http://localhost:"+port);
