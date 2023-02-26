@@ -201,7 +201,9 @@ app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
     console.log('Trying to load ' + process.cwd()+path);
 
     try {
-        if (fs.existsSync(path)) {
+        if (fs.existsSync(process.cwd()+path)) {
+            console.log('File exist');
+
             fs.readFile(process.cwd()+path, function(err,data) {
                 if(err) {
                     console.log('Err while sending data file ' + err);
@@ -217,6 +219,8 @@ app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
                 }
             });
         } else {
+            console.log('File doesn\'t exist');
+
             var date = req.params.year+req.params.month+req.params.day;
             var fileNameParts = req.params.file.split("-");
 

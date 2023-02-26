@@ -1073,6 +1073,7 @@
         });
 
         // Add event handlers for the time navigation buttons.
+        //function function gfsStep(date, step)
         d3.select("#nav-backward-more").on("click", navigate.bind(null, -24));
         d3.select("#nav-forward-more" ).on("click", navigate.bind(null, +24));
         d3.select("#nav-backward"     ).on("click", navigate.bind(null, -6));
