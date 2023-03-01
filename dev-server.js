@@ -287,7 +287,10 @@ function cleanData() {
 }
 
 function exitHandler(options, exitCode) {
-    if (options.cleanup) console.log('cleaning'); //cleanData(); //TODO uncomment
+    if (options.cleanup) {
+        console.log('cleaning');
+        cleanData();
+    }
     if (exitCode || exitCode === 0) console.log(exitCode);
     if (options.exit) process.exit();
 }
@@ -304,4 +307,4 @@ process.on('SIGUSR2', exitHandler.bind(null, {exit:true}));
 //catches uncaught exceptions
 process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
 
-//open("http://localhost:"+port);
+open("http://localhost:"+port);
