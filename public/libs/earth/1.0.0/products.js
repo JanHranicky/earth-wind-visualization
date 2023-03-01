@@ -321,10 +321,10 @@ var products = function() {
                     paths: [gfs1p0degPath(attr, "air_density", attr.surface, attr.level)],
                     date: gfsDate(attr),
                     builder: function(file) {
-                        var vars = file.variables;
-                        var air_density = vars.air_density, data = air_density.data;
+                        var vars = file[0];
+                        var air_density = vars.air_density, data = vars.data;
                         return {
-                            header: netcdfHeader(vars.time, vars.lat, vars.lon, file.Originating_or_generating_Center),
+                            header: vars.header, //netcdfHeader(vars.time, vars.lat, vars.lon, file.Originating_or_generating_Center),
                             interpolate: bilinearInterpolateScalar,
                             data: function(i) {
                                 return data[i];

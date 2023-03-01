@@ -16,6 +16,7 @@ const fs = require("fs");
 const querystring = require('querystring');
 const Server = require('http').Server;
 const path = require('path');
+const { tryToDownloadCurrentData } = require('./public/libs/earth/1.0.0/nomadsClient.js');
 
 const port = process.env.PORT || 3000;
 
@@ -78,24 +79,17 @@ app.get('/download', (req, res) => {
         res.send('Wrong parameters of the GET request. Call this endpoint with following parameters: ?date=[YYYYMMDD]&time=[XXXX]&level=[XX]');
     }
     
-    nc.downloadAndSavaNomadData(parsedQs.date,parsedQs.time,parsedQs.level,res);
+    nc.downloadAndSaveNomadData(parsedQs.date,parsedQs.time,parsedQs.level,res);
 });
 
 app.get('/data/weather/current/:file', (req, res) => {
     console.log("Trying to load current file data file");
     console.log(req.params.file);
 
-    //if current file exists, check the date and:
-    //  if it is corrent send the file
-    //  if it is old, try:
-    //      to look for new file on disk, if found send it
-    //          if not try to download new datafile based on current datetime
-    //              if not successfull, try again with older time 
-    //var obj = JSON.parse(fs.readFileSync('file', 'utf8'));
-    var path = './data/weather/current/' + req.params.file;
     var level = req.params.file.split('-')[3].replace('hPa','');
+    var variable = req.params.file.split('-')[1];
 
-    var supposedCurrentPath = pathFromDate(level);
+    var supposedCurrentPath = pathFromDate(level,variable);
 
     try {
         console.log('File path ' + supposedCurrentPath);
@@ -106,7 +100,10 @@ app.get('/data/weather/current/:file', (req, res) => {
             res.send(fs.readFileSync(supposedCurrentPath, 'utf8').toString());        
         } else { //download current date
             //nc.downloadAndSavaNomadData()
-            nc.tryToDownloadCurrentData("20230227","0000","250",5,res);
+            var NDateObj = toNOMADSDate();
+            var date = NDateObj.year+NDateObj.month+NDateObj.day;
+
+            nc.tryToDownloadCurrentData(date,NDateObj.time,level,variable,5,res);
         }
     } catch (e) {
         console.log("Error reading current file " + req.params.file + " from disk. " + e);
@@ -133,21 +130,36 @@ function getIntervalFromTimeValue(time) {
     return "1800";
 }
 
-/**
- * Returns path to level's current .json datafile according to given date, if date is null current datetime is used 
- * @param {*} date 
- * @param {*} level 
- */
-function pathFromDate(level,date = null) {
+
+function toNOMADSDate(date=null) {
     if (!date) date = new Date();
+
     var year = date.getFullYear().toString();
     var month = date.getMonth().toString().length == 1 ? "0" + (date.getMonth() + 1).toString() : (date.getMonth() + 1).toString();
     var day = date.getDate().toString().length == 1 ? "0" + date.getDate().toString() : date.getDate().toString();
 
     var time = getIntervalFromTimeValue(parseInt(date.getHours()));
 
+    return {
+        year: year,
+        month: month,
+        day: day,
+        time: time
+    };
+}
+
+/**
+ * Returns path to level's current .json datafile according to given date, if date is null current datetime is used 
+ * @param {*} level 
+ * @param {*} variable 
+ * @param {*} date 
+ */
+function pathFromDate(level,variable,date = null) {
+    if (!date) date = new Date();
+    var NDateObj = toNOMADSDate(date);
+
     var path = "./data/weather/";
-    path += year + "/" + month + "/" + day + "/" + time+"-wind-isobaric-"+level+"hPa-gfs-1.0.json";
+    path += NDateObj.year + "/" + NDateObj.month + "/" + NDateObj.day + "/" + NDateObj.time+"-"+variable+"-isobaric-"+level+"hPa-gfs-1.0.json";
 
     return path;
 }
@@ -224,11 +236,17 @@ app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
             var date = req.params.year+req.params.month+req.params.day;
             var fileNameParts = req.params.file.split("-");
 
-            var time = fileNameParts[0];
             const PRESSURE_UNIT = "hPa";
+            
+            var time = fileNameParts[0];
             var level = fileNameParts[3].includes(PRESSURE_UNIT) ? fileNameParts[3].replace(PRESSURE_UNIT,'') : fileNameParts[3];
-
-            nc.downloadAndSavaNomadData(date,time,level,res);
+            var variable = fileNameParts[1];
+            
+            if (isForeCast(req.params.day,req.params.month,req.params.year)) nc.downloadAndSaveNomadData(date,time,level,variable,res);
+            else {
+                const MAX_TRIES = 5;
+                nc.downloadForeCastData(date,time,level,variable,MAX_TRIES,res)
+            }
         }
     } catch(err) {
         console.log('Err while sending data file ' + err);
@@ -237,6 +255,18 @@ app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
         res.send('Err while sending data file ' + err);
     }
 });
+
+/**
+ * Returns true if given date is from the future
+ * @param {*} day 
+ * @param {*} month 
+ * @param {*} year 
+ * @returns 
+ */
+function isForeCast(day,month,year) {
+    var date = new Date(year,month-1,day);
+    return date > new Date();
+}
 
 // Using a function to set default app path
 function getDir() {
@@ -247,4 +277,31 @@ function getDir() {
     }
 }
 
-open("http://localhost:"+port);
+function cleanData() {
+    try {
+        const DATA_DIR_PATH = './data/weather';
+        fs.rmSync(DATA_DIR_PATH, { recursive: true, force: true });
+    } catch (e) {
+        console.log('Error while cleaning the download data. ' + e);
+    }
+}
+
+function exitHandler(options, exitCode) {
+    if (options.cleanup) console.log('cleaning'); //cleanData(); //TODO uncomment
+    if (exitCode || exitCode === 0) console.log(exitCode);
+    if (options.exit) process.exit();
+}
+
+//do something when app is closing
+process.on('exit', exitHandler.bind(null,{cleanup:true}));
+//catches ctrl+c event
+process.on('SIGINT', exitHandler.bind(null, {exit:true}));
+
+// catches "kill pid" (for example: nodemon restart)
+process.on('SIGUSR1', exitHandler.bind(null, {exit:true}));
+process.on('SIGUSR2', exitHandler.bind(null, {exit:true}));
+
+//catches uncaught exceptions
+process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
+
+//open("http://localhost:"+port);
