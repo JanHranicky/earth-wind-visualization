@@ -100,7 +100,7 @@ app.get('/data/weather/current/:file', (req, res) => {
             res.send(fs.readFileSync(supposedCurrentPath, 'utf8').toString());        
         } else { //download current date
             //nc.downloadAndSavaNomadData()
-            var NDateObj = toNOMADSDate();
+            var NDateObj = nc.toNOMADSDate();
             var date = NDateObj.year+NDateObj.month+NDateObj.day;
 
             nc.tryToDownloadCurrentData(date,NDateObj.time,level,variable,5,res);
@@ -113,41 +113,6 @@ app.get('/data/weather/current/:file', (req, res) => {
     }
 });
 
-
-/**
- * Returns NOMAD's time interval based on given time
- * @param {*} time 
- * @returns 
- */
-function getIntervalFromTimeValue(time) {
-    if (time < 6) {
-        return "0000";
-    } else if (time < 12) {
-        return "0600";
-    } else if (time < 18) {
-        return "1200";
-    }
-    return "1800";
-}
-
-
-function toNOMADSDate(date=null) {
-    if (!date) date = new Date();
-
-    var year = date.getFullYear().toString();
-    var month = date.getMonth().toString().length == 1 ? "0" + (date.getMonth() + 1).toString() : (date.getMonth() + 1).toString();
-    var day = date.getDate().toString().length == 1 ? "0" + date.getDate().toString() : date.getDate().toString();
-
-    var time = getIntervalFromTimeValue(parseInt(date.getHours()));
-
-    return {
-        year: year,
-        month: month,
-        day: day,
-        time: time
-    };
-}
-
 /**
  * Returns path to level's current .json datafile according to given date, if date is null current datetime is used 
  * @param {*} level 
@@ -156,50 +121,13 @@ function toNOMADSDate(date=null) {
  */
 function pathFromDate(level,variable,date = null) {
     if (!date) date = new Date();
-    var NDateObj = toNOMADSDate(date);
+    var NDateObj = nc.toNOMADSDate(date);
 
     var path = "./data/weather/";
     path += NDateObj.year + "/" + NDateObj.month + "/" + NDateObj.day + "/" + NDateObj.time+"-"+variable+"-isobaric-"+level+"hPa-gfs-1.0.json";
 
     return path;
 }
-
-/**
- * Calculates hour difference between two dates
- * @param {*} date1 
- * @param {*} date2 
- * @returns hour difference
- */
-function hourDiff(date1,date2) {
-    return Math.abs(date1 - date2) / 36e5;
-}
-
-/**
- * Returns true, if the current data file with given path is up-to-date
- * @param {*} path 
- * @param {*} res 
- * @returns 
- */
-function checkCurrentFileTopicality(path, res) {
-    
-    try {
-        var currentDataFileObj = JSON.parse(fs.readFileSync(path, 'utf8'));
-        if (currentDataFileObj[0]) {
-            var refDate = new Date(currentDataFileObj[0].header.refTime);
-            var now = new Date();
-
-            return hourDiff(refDate,now) < 6;
-        }
-    } catch (e) {
-        console.log('Error. Trying to read current data ' + path + ' file from disk resulted in error: ' + e);
-
-        res.status(500);
-        res.send('Error. Trying to read current data ' + path + ' file from disk resulted in error: ' + e);
-    }
-
-    return false;
-}
-
 
 app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
     console.log(req.params);
@@ -242,10 +170,14 @@ app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
             var level = fileNameParts[3].includes(PRESSURE_UNIT) ? fileNameParts[3].replace(PRESSURE_UNIT,'') : fileNameParts[3];
             var variable = fileNameParts[1];
             
-            if (isForeCast(req.params.day,req.params.month,req.params.year)) nc.downloadAndSaveNomadData(date,time,level,variable,res);
+            if (!isForeCast(req.params.day,req.params.month,req.params.year)) nc.downloadAndSaveNomadData(date,time,level,variable,res);
             else {
-                const MAX_TRIES = 5;
-                nc.downloadForeCastData(date,time,level,variable,MAX_TRIES,res)
+                const MAX_TRIES = 6;
+                var requestDate = nc.YYYYMMDDHHToDate(date,time);
+                var currentDateObj = nc.toNOMADSDate();
+                var date = currentDateObj.year+currentDateObj.month+currentDateObj.day
+
+                nc.downloadForeCastData(requestDate,date,currentDateObj.time,level,variable,MAX_TRIES,res)
             }
         }
     } catch(err) {
