@@ -3,6 +3,10 @@
 //Added previous month and next month view
 
 function CalendarControl() {
+    var _highlighted_year = null;
+    var _highlighted_month = null;
+    var _highlighted_day = null;
+
     const calendar = new Date();
     const calendarControl = {
       localDate: new Date(),
@@ -76,6 +80,24 @@ function CalendarControl() {
             calendarControl.calMonthName[calendar.getMonth()]
           } ${calendar.getFullYear()}`
         );
+        if (_highlighted_day) {
+          document
+          .querySelectorAll(".number-item")
+          [_highlighted_day].classList.remove("calendar-today");
+
+          _highlighted_day = null; //reset highlight
+          _highlighted_month = null;
+          _highlighted_year = null;
+        }
+
+        document
+        .querySelectorAll(".number-item")
+        [e.target.textContent-1].classList.add("calendar-today");
+        _highlighted_day = e.target.textContent-1;
+        _highlighted_month = document.querySelector(".calendar .calendar-month-label").innerHTML;
+        _highlighted_year = document.querySelector(".calendar .calendar-year-label").innerHTML;
+
+        //TODO change url
       },
       plotSelectors: function () {
         document.querySelector(
@@ -176,13 +198,24 @@ function CalendarControl() {
         let currentYear = calendarControl.localDate.getFullYear();
         let changedYear = calendar.getFullYear();
         if (
+          !_highlighted_day &&
           currentYear === changedYear &&
           currentMonth === changedMonth &&
           document.querySelectorAll(".number-item")
         ) {
+          _highlighted_day = calendar.getDate() - 1;
+          _highlighted_month = document.querySelector(".calendar .calendar-month-label").innerHTML;
+          _highlighted_year = document.querySelector(".calendar .calendar-year-label").innerHTML;
+
           document
             .querySelectorAll(".number-item")
             [calendar.getDate() - 1].classList.add("calendar-today");
+        } else if (_highlighted_day &&
+                   _highlighted_month == document.querySelector(".calendar .calendar-month-label").innerHTML &&
+                   _highlighted_year == document.querySelector(".calendar .calendar-year-label").innerHTML){
+          document
+          .querySelectorAll(".number-item")
+          [_highlighted_day].classList.add("calendar-today");
         }
       },
       plotPrevMonthDates: function(dates){
