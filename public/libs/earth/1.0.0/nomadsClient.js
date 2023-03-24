@@ -25,6 +25,8 @@ module.exports = function() {
             case "air_density":
             case "temp":
                 return "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl?file=gfs.t"+time+"z.pgrb2.0p25.f"+hours+"&lev_"+level+"_mb=on&var_TMP=on&dir=%2Fgfs."+date+"%2F"+time+"%2Fatmos";
+            case "vvel":
+                return "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl?file=gfs.t"+time+"z.pgrb2.0p25.f"+hours+"&lev_"+level+"_mb=on&var_VVEL=on&dir=%2Fgfs."+date+"%2F"+time+"%2Fatmos";
             default:
                 return "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl?file=gfs.t"+time+"z.pgrb2.0p25.f"+hours+"&lev_"+level+"_mb=on&var_UGRD=on&var_VGRD=on&dir=%2Fgfs."+date+"%2F"+time+"%2Fatmos";
         }
@@ -248,6 +250,36 @@ module.exports = function() {
         });
     }
 
+    function getLatestDataDate(date,time,level,variable,cnt,res) {
+        console.log('Trying to look for current data url. try num. ' + cnt);
+        if (cnt == 0) {
+            res.status(500);
+            res.send("Error while trying to lookup current data url.");
+        }
+
+        const https = require('https');
+        const util = require('util')
+ 
+        var isAirDensity = variable == "air_density";
+
+        var downloadUrl = constructRequestUrl(date,time.slice(0,2),level,isAirDensity ? "temp" : variable);
+        console.log(downloadUrl);
+
+        return https.get(downloadUrl, function(response) {
+            console.log(response.statusCode);
+            if (response.statusCode == 200) {
+                return YYYYMMDDHHToDate(date,time);
+            } else if (response.statusCode == 404) { //Current data is not yet published, Download 6hr older data
+                var dateTimeObj = getPreviousStep(date,time);
+                cnt -= 1;
+                return getLatestDataDate(dateTimeObj.date,dateTimeObj.time,level,variable,cnt,res);
+            } else {
+                res.status(500);
+                res.send("Error while sending Nomad request. Nomad responded with code: "+response.statusCode);
+            }
+        });
+    }
+
     /**
      * Tries to find the latest data url, if it is found another function that tries to download forecast data is called.
      * @param {*} reqDate 
@@ -431,6 +463,7 @@ module.exports = function() {
         tryToDownloadCurrentData: tryToDownloadCurrentData,
         downloadForeCastData: findLatestDataUrl,
         YYYYMMDDHHToDate: YYYYMMDDHHToDate,
-        toNOMADSDate: toNOMADSDate
+        toNOMADSDate: toNOMADSDate,
+        getLatestDataDate: getLatestDataDate
     };
 }();

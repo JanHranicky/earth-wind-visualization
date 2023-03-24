@@ -344,6 +344,141 @@ var products = function() {
             }
         },
 
+        "vvel": {
+            matches: _.matches({param: "wind", overlayType: "vvel"}),
+            create: function(attr) {
+                return buildProduct({
+                    field: "scalar",
+                    type: "vvel",
+                    description: localize({
+                        name: {en: "Vertical Velocity", ja: ""},
+                        qualifier: {en: " @ " + describeSurface(attr), ja: " @ " + describeSurfaceJa(attr)}
+                    }),
+                    paths: [gfs1p0degPath(attr, "vvel", attr.surface, attr.level)],
+                    date: gfsDate(attr),
+                    builder: function(file) {
+                        var record = file[0], data = record.data;
+                        return {
+                            header: record.header,
+                            interpolate: bilinearInterpolateScalar,
+                            data: function(i) {
+                                return data[i];
+                            }
+                        }
+                    },
+                    units: [
+                        {label: "cm/s", conversion: function(x) { return x }, precision: 4},
+                    ],
+                    scale: {
+                        bounds: [-1, 1],
+                        gradient: µ.segmentedColorScale([
+                            [-1,     [37, 4, 42]],
+                            //[-0.8,     [41, 10, 130]],
+                            [-0.6,     [81, 40, 40]],
+                            //[-0.4,  [192, 37, 149]],  // -40 C/F
+                            [-0.2, [70, 215, 215]],  // 0 F
+                            //[0,  [21, 84, 187]],   // 0 C
+                            [0.2,  [24, 132, 14]],   // just above 0 C
+                            //[0.4,     [247, 251, 59]],
+                            [0.6,     [235, 167, 21]],
+                            //[0.8,     [230, 71, 39]],
+                            [1,     [88, 27, 67]]
+                        ])
+                    }
+                });
+            }
+        },
+
+        "hgt": {
+            matches: _.matches({param: "wind", overlayType: "hgt"}),
+            create: function(attr) {
+                return buildProduct({
+                    field: "scalar",
+                    type: "hgt",
+                    description: localize({
+                        name: {en: "Geopotential Height", ja: ""},
+                        qualifier: {en: " @ " + describeSurface(attr), ja: " @ " + describeSurfaceJa(attr)}
+                    }),
+                    paths: [gfs1p0degPath(attr, "hgt", attr.surface, attr.level)],
+                    date: gfsDate(attr),
+                    builder: function(file) {
+                        var record = file[0], data = record.data;
+                        return {
+                            header: record.header,
+                            interpolate: bilinearInterpolateScalar,
+                            data: function(i) {
+                                return data[i];
+                            }
+                        }
+                    },
+                    units: [
+                        {label: "gpm", conversion: function(x) { return x }, precision: 4},
+                    ],
+                    scale: {
+                        bounds: [-20, 20],
+                        gradient: µ.segmentedColorScale([
+                            [-20,     [37, 4, 42]],
+                            //[-0.8,     [41, 10, 130]],
+                            [-10,     [81, 40, 40]],
+                            //[-0.4,  [192, 37, 149]],  // -40 C/F
+                            [0, [70, 215, 215]],  // 0 F
+                            //[0,  [21, 84, 187]],   // 0 C
+                            [10,  [24, 132, 14]],   // just above 0 C
+                            //[0.4,     [247, 251, 59]],
+                            [20,     [235, 167, 21]],
+                            //[0.8,     [230, 71, 39]],
+                            //[1,     [88, 27, 67]]
+                        ])
+                    }
+                });
+            }
+        },
+
+        "dzdt": {
+            matches: _.matches({param: "wind", overlayType: "dzdt"}),
+            create: function(attr) {
+                return buildProduct({
+                    field: "scalar",
+                    type: "dzdt",
+                    description: localize({
+                        name: {en: "Vertical Velocity (Geometric)", ja: ""},
+                        qualifier: {en: " @ " + describeSurface(attr), ja: " @ " + describeSurfaceJa(attr)}
+                    }),
+                    paths: [gfs1p0degPath(attr, "dzdt", attr.surface, attr.level)],
+                    date: gfsDate(attr),
+                    builder: function(file) {
+                        var record = file[0], data = record.data;
+                        return {
+                            header: record.header,
+                            interpolate: bilinearInterpolateScalar,
+                            data: function(i) {
+                                return data[i];
+                            }
+                        }
+                    },
+                    units: [
+                        {label: "m/s", conversion: function(x) { return x }, precision: 4},
+                    ],
+                    scale: {
+                        bounds: [-40, 40],
+                        gradient: µ.segmentedColorScale([
+                            [-40,     [37, 4, 42]],
+                            [-30,     [41, 10, 130]],
+                            [-20,     [81, 40, 40]],
+                            [-10,  [192, 37, 149]],  // -40 C/F
+                            [0, [70, 215, 215]],  // 0 F
+                            [10,  [21, 84, 187]],   // 0 C
+                            [20,  [24, 132, 14]],   // just above 0 C
+                            [30,     [247, 251, 59]],
+                            [40,     [235, 167, 21]],
+                            //[0.8,     [230, 71, 39]],
+                            //[1,     [88, 27, 67]]
+                        ])
+                    }
+                });
+            }
+        },
+
         "wind_power_density": {
             matches: _.matches({param: "wind", overlayType: "wind_power_density"}),
             create: function(attr) {

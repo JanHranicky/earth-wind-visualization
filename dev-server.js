@@ -170,7 +170,8 @@ app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
             var level = fileNameParts[3].includes(PRESSURE_UNIT) ? fileNameParts[3].replace(PRESSURE_UNIT,'') : fileNameParts[3];
             var variable = fileNameParts[1];
             
-            if (!isForeCast(req.params.day,req.params.month,req.params.year)) nc.downloadAndSaveNomadData(date,time,level,variable,res);
+            console.log('isForeCast='+isForeCast(req.params.day,req.params.month,req.params.year,time,res));
+            if (!isForeCast(req.params.day,req.params.month,req.params.year,time,res)) nc.downloadAndSaveNomadData(date,time,level,variable,res);
             else {
                 const MAX_TRIES = 6;
                 var requestDate = nc.YYYYMMDDHHToDate(date,time);
@@ -195,8 +196,8 @@ app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
  * @param {*} year 
  * @returns 
  */
-function isForeCast(day,month,year) {
-    var date = new Date(year,month-1,day);
+async function isForeCast(day,month,year,time,res) {
+    var date = nc.YYYYMMDDHHToDate(year+month+day,time);
     return date > new Date();
 }
 
@@ -239,4 +240,4 @@ process.on('SIGUSR2', exitHandler.bind(null, {exit:true}));
 //catches uncaught exceptions
 process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
 
-open("http://localhost:"+port);
+//open("http://localhost:"+port);
