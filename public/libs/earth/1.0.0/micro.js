@@ -147,6 +147,13 @@ var µ = function() {
     }
 
     function dateToConfig(date) {
+        console.log('in dateToConfig');
+        console.log(date);
+
+        console.log(µ.dateToUTCymd(date, "/"));
+        console.log(µ.zeroPad(date.getUTCHours(), 2) + "00");
+        console.log('SAVED ABOVE DATE');
+        
         return {date: µ.dateToUTCymd(date, "/"), hour: µ.zeroPad(date.getUTCHours(), 2) + "00"};
     }
 

@@ -97,7 +97,42 @@ function CalendarControl() {
         _highlighted_month = document.querySelector(".calendar .calendar-month-label").innerHTML;
         _highlighted_year = document.querySelector(".calendar .calendar-year-label").innerHTML;
 
-        //TODO change url
+        calendarControl.navigateToDate(calendar.getFullYear(),calendar.getMonth(),e.target.textContent);
+      },
+      navigateToDate: function(year,month,day) {
+        var urlParts = window.location.href.split('/');
+        if (!urlParts[3]) return;
+
+        //var url = urlParts[0] + urlParts[1] + urlParts[2] + "/";
+        var url = "";
+        if (urlParts[3] == "#") { //change to /#yyyy/mm/dd/hhhhZ/wind/isobaric/50hPa/orthographic
+          var now = new Date();
+
+          url += "#" + year + "/";
+          url += month + "/";
+          url += day + "/";
+          url += calendarControl.valFromTimeValue(now.getHours()) + "Z/";
+          url += "wind/isobaric/50hPa/orthographic";
+        } else { //just change date
+          var now = new Date();
+
+          url += "#" + year + "/";
+          url += month + "/";
+          url += day + "/";
+          url += calendarControl.valFromTimeValue(now.getHours()) + "Z/";
+          url += urlParts[7] + "/" + urlParts[8] + "/" + urlParts[9] + "/" + urlParts[10]; //keep the rest
+        }
+        console.log(url);
+        window.location.href = url;
+      },valFromTimeValue: function(time) {
+        if (time < 6) {
+            return "0000";
+        } else if (time < 12) {
+            return "0600";
+        } else if (time < 18) {
+            return "1200";
+        }
+        return "1800";
       },
       plotSelectors: function () {
         document.querySelector(

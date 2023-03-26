@@ -111,6 +111,26 @@ body {
 
 .calendar_wrapper {
     pointer-events: all;
+    margin-left: 0.5em;
+}
+
+input[type="date"] { 
+    background: transparent;
+    color: #505050;
+    padding-top: 2px;
+    vertical-align: middle;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(100%);
+}
+
+#calendar_wrapper.invisible {
+    margin-top: 0;
+    padding: 0 1rem 0 1rem;
+    opacity: 0;
+    max-height: 0;
+    transition: opacity 250ms ease, max-height 250ms ease, margin-top 250ms ease;
+    -webkit-transition: opacity 250ms ease, max-height 250ms ease, margin-top 250ms ease;
 }
 
 #details {
@@ -119,7 +139,6 @@ body {
     left: 2%;
     pointer-events: none;  /* This div is just a container--do not let it interfere with operation of the map. */
     /*display: inline-block;*/
-    border: 1px solid red;
 }
 
 #earth {

@@ -71,37 +71,11 @@ var products = function() {
             paths: [],
             date: null,
             navigate: function(step) {
+                console.log('bildProduct navigate date '+ this.date);
                 return gfsStep(this.date, step);
             },
             load: function(cancel) {
                 var me = this;
-                console.log('products: load');
-                console.log('products: this.paths ' + this.paths);
-
-                /** 
-                if (!fileExists(this.paths)) {
-                    console.log(this.paths + ' does not exist. Attemting download');
-                    
-                    var xmlHttp = new XMLHttpRequest();
-                    xmlHttp.open( "GET", constructDownloadUrl(this.paths), false );
-                    xmlHttp.send( null );
-
-                    if (xmlHttp.status != 200) {
-                        var d = when.defer();
-                        return d.reject({status: 404, message: "File " + this.paths + " is not present on NOMAD's server", resource: this.paths});
-                    }
-
-                    var file = [JSON.parse(xmlHttp.responseText)]; 
-                    //TODO divne stridani casu
-                    //TODO statusy pri neexistujicim datovem souboru
-                    //TODO statusy pri stahovani dat 
-                    //TODO aby stranka reagovala pri neuspesnem loadu souboru
-
-                    console.log(file);
-                    return cancel.requested ? null : _.extend(me, buildGrid(me.builder.apply(me, file)));
-                }
-                */
-
                 return when.map(this.paths, µ.loadJson).then(function(files) {
                     return cancel.requested ? null : _.extend(me, buildGrid(me.builder.apply(me, files)));
                 });
@@ -124,11 +98,13 @@ var products = function() {
 
     function gfsDate(attr) {
         if (attr.date === "current") {
-            // Construct the date from the current time, rounding down to the nearest three-hour block.
-            var now = new Date(Date.now()), hour = Math.floor(now.getUTCHours() / 3);
+            // Construct the date from the current time, rounding down to the nearest six-hour block.
+            var now = new Date(Date.now()), hour = Math.floor(now.getUTCHours() / 6)*6;
+            console.log('gfsDate current = ' + new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hour)));
             return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hour));
         }
         var parts = attr.date.split("/");
+        console.log('gfsDate else ' + new Date(Date.UTC(+parts[0], parts[1] - 1, +parts[2], +attr.hour.substr(0, 2)))); 
         return new Date(Date.UTC(+parts[0], parts[1] - 1, +parts[2], +attr.hour.substr(0, 2)));
     }
 
@@ -139,7 +115,11 @@ var products = function() {
     function gfsStep(date, step) {
         //var adjusted = new Date(date);
         //var offset = (step > 1 ? 8 : step < -1 ? -8 : step) * 3, adjusted = new Date(date);
+        console.log(date);
+        console.log(step)
         date.setHours(date.getHours() + step);
+        console.log("gfsStep return date = " + date);
+
         return date;
     }
 

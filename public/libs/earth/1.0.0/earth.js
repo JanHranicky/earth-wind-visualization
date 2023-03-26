@@ -268,11 +268,16 @@
      * Modifies the configuration to navigate to the chronologically next or previous data layer.
      */
     function navigate(step) {
+        console.log('configuration.load("date") ' + configuration.get("date"));
+        console.log('configuration.load("hour") ' + configuration.get("hour"));
+        console.log('gridAgent.value().primaryGrid.date ' + gridAgent.value().primaryGrid.date);
+
         if (downloadsInProgress > 0) {
             log.debug("Download in progress--ignoring nav request.");
             return;
         }
         var next = gridAgent.value().primaryGrid.navigate(step);
+        console.log("next = " + next);
         if (next) {
             configuration.save(µ.dateToConfig(next));
         }
@@ -701,10 +706,20 @@
     function validityDate(grids) {
         // When the active layer is considered "current", use its time as now, otherwise use current time as
         // now (but rounded down to the nearest three-hour block).
-        var THREE_HOURS = 3 * HOUR;
-        var now = grids ? grids.primaryGrid.date.getTime() : Math.floor(Date.now() / THREE_HOURS) * THREE_HOURS;
+        var SIX_HOURS = 6 * HOUR;
+        var now = grids ? grids.primaryGrid.date.getTime() : Math.floor(Date.now() / SIX_HOURS) * SIX_HOURS;
         var parts = configuration.get("date").split("/");  // yyyy/mm/dd or "current"
         var hhmm = configuration.get("hour");
+
+        console.log('now ' + new Date(now));
+        console.log('parts ' + parts);
+        console.log('hhmm ' + hhmm);
+
+        var returnVal = parts.length > 1 ?
+        Date.UTC(+parts[0], parts[1] - 1, +parts[2], +hhmm.substring(0, 2)) :
+        parts[0] === "current" ? now : null;
+        console.log('validityDate: ReturnValue = ' + new Date(returnVal));
+
         return parts.length > 1 ?
             Date.UTC(+parts[0], parts[1] - 1, +parts[2], +hhmm.substring(0, 2)) :
             parts[0] === "current" ? now : null;
@@ -715,7 +730,9 @@
      */
     function showDate(grids) {
         var date = new Date(validityDate(grids)), isLocal = d3.select("#data-date").classed("local");
+        console.log('showDate date2 = ' + date);
         var formatted = isLocal ? µ.toLocalISO(date) : µ.toUTCISO(date);
+        console.log('showDate formatted = ' + formatted);
         d3.select("#data-date").text(formatted + " " + (isLocal ? "Local" : "UTC"));
         d3.select("#toggle-zone").text("⇄ " + (isLocal ? "UTC" : "Local"));
     }
@@ -899,7 +916,12 @@
             }
             else {
                 d3.select("#menu").classed("invisible", !d3.select("#menu").classed("invisible"));
+                if (!d3.select("#calendar_wrapper").classed("invisible")) d3.select("#calendar_wrapper").classed("invisible", !d3.select("#calendar_wrapper").classed("invisible"));
             }
+        });
+
+        d3.select("#show-calendar").on("click", function() {
+            d3.select("#calendar_wrapper").classed("invisible", !d3.select("#calendar_wrapper").classed("invisible"));
         });
 
         if (µ.isFF()) {
@@ -1079,6 +1101,25 @@
         d3.select("#nav-backward"     ).on("click", navigate.bind(null, -6));
         d3.select("#nav-forward"      ).on("click", navigate.bind(null, +6));
         d3.select("#nav-now").on("click", function() { configuration.save({date: "current", hour: ""}); });
+        d3.select("#nav-date").on("change", function() {
+            var picked = document.getElementById("nav-date").value;
+            var hours = configuration.get("hour");
+            var next = new Date(picked);
+            if (hours) next.setHours(hours.substring(0,2));
+            configuration.save(µ.dateToConfig(next));
+        });
+        configuration.on("change:date", function() {
+            console.log('CHANGED DATE TO ' + configuration.get("date"));
+            var newDate = configuration.get("date");
+            var d = newDate == "current" ? new Date() : new Date(newDate);
+            
+            document.getElementById("nav-date").value = d.getUTCFullYear()
+                                                        + "-" +
+                                                        ((d.getUTCMonth() + 1) > 9 ? (d.getUTCMonth() + 1) : "0" + (d.getUTCMonth() + 1))
+                                                        + "-" +
+                                                        ((d.getUTCDate() + 1) > 9 ? (d.getUTCDate() + 1) : "0" + (d.getUTCDate() + 1));
+        });
+
 
         d3.select("#option-show-grid").on("click", function() {
             configuration.save({showGridPoints: !configuration.get("showGridPoints")});

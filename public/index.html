@@ -65,21 +65,21 @@
                 <div id="menu" class="invisible">
                     <!--<p class="calendar"></p> -->
                     <p>Date | <span
-                        id="data-date" class="local"></span> <span
-                        id="toggle-zone" class="text-button"></span>
+                        id="data-date"></span>
+                        <!-- <span id="toggle-zone" class="text-button"></span>-->
                     </p>
                     <p>Data | <span id="data-layer"></span></p>
                     <p><span id="scale-label">Scale | </span><canvas id="scale"></canvas></p>
                     <p>Source | <span id="data-center"></span></p>
                     <p>Control | <span
-                        class="text-button" id="nav-now" title="Current Conditions">Now</span><span
-                        class="text-button" id="nav-backward-more"> « </span> – <span
+                        class="text-button" id="nav-now" title="Current Conditions">Now</span>
+                        <span><input type="date" id="nav-date"></span>
+                        <span class="text-button" id="nav-backward-more"> « </span> – <span
                         class="text-button" id="nav-backward"> ‹ </span> – <span
                         class="text-button" id="nav-forward"> › </span> – <span
                         class="text-button" id="nav-forward-more"> » </span><span
                         class="text-button" id="show-location" title="Current Position">〖◯〗</span><span
                         class="text-button" id="option-show-grid" title="Toggle Grid">Grid</span>
-                        <span class="material-symbols-outlined"> calendar_month</span>
                     </p>
                     <p hidden>Mode | <span
                         class="text-button" id="wind-mode-enable">Air</span> <!-- – <span
@@ -149,8 +149,9 @@
                     -->
                 </div>
             </div>
-            <div class="calendar_wrapper">
-                <div class="calendar"></div>
+            <div class="calendar_wrapper invisible" id="calendar_wrapper">
+                <!-- <div class="calendar"></div> -->
+                <input type="date" id="date-select" name="trip-start" value="2018-07-22" min="2018-01-01" max="2018-12-31">
             </div>
         </div>
     </div>
