@@ -211,7 +211,6 @@
      */
     function buildMesh(resource) {
         var cancel = this.cancel;
-        console.log('buildMesh: resource' + resource);
         report.status("Downloading...");
         return µ.loadJson(resource).then(function(topo) {
             if (cancel.requested) return null;
@@ -258,6 +257,17 @@
         });
         return when.all(loaded).then(function(products) {
             log.time("build grids");
+
+            /*
+            var parts = configuration.get("date").split("/");  // yyyy/mm/dd or "current"
+            var hhmm = configuration.get("hour");
+            var now = Math.floor(Date.now() / (6 * HOUR)) * (6 * HOUR);
+            var date = parts.length > 1 ?
+            new Date(Date.UTC(+parts[0], parts[1] - 1, +parts[2], +hhmm.substring(0, 2))) :
+            parts[0] === "current" ? new Date(now) : null;
+            products[0].date = date;
+            */
+
             return {primaryGrid: products[0], overlayGrid: products[1] || products[0]};
         }).ensure(function() {
             downloadsInProgress--;
@@ -268,16 +278,11 @@
      * Modifies the configuration to navigate to the chronologically next or previous data layer.
      */
     function navigate(step) {
-        console.log('configuration.load("date") ' + configuration.get("date"));
-        console.log('configuration.load("hour") ' + configuration.get("hour"));
-        console.log('gridAgent.value().primaryGrid.date ' + gridAgent.value().primaryGrid.date);
-
         if (downloadsInProgress > 0) {
             log.debug("Download in progress--ignoring nav request.");
             return;
         }
         var next = gridAgent.value().primaryGrid.navigate(step);
-        console.log("next = " + next);
         if (next) {
             configuration.save(µ.dateToConfig(next));
         }
@@ -711,14 +716,9 @@
         var parts = configuration.get("date").split("/");  // yyyy/mm/dd or "current"
         var hhmm = configuration.get("hour");
 
-        console.log('now ' + new Date(now));
-        console.log('parts ' + parts);
-        console.log('hhmm ' + hhmm);
-
         var returnVal = parts.length > 1 ?
         Date.UTC(+parts[0], parts[1] - 1, +parts[2], +hhmm.substring(0, 2)) :
         parts[0] === "current" ? now : null;
-        console.log('validityDate: ReturnValue = ' + new Date(returnVal));
 
         return parts.length > 1 ?
             Date.UTC(+parts[0], parts[1] - 1, +parts[2], +hhmm.substring(0, 2)) :
@@ -730,9 +730,7 @@
      */
     function showDate(grids) {
         var date = new Date(validityDate(grids)), isLocal = d3.select("#data-date").classed("local");
-        console.log('showDate date2 = ' + date);
         var formatted = isLocal ? µ.toLocalISO(date) : µ.toUTCISO(date);
-        console.log('showDate formatted = ' + formatted);
         d3.select("#data-date").text(formatted + " " + (isLocal ? "Local" : "UTC"));
         d3.select("#toggle-zone").text("⇄ " + (isLocal ? "UTC" : "Local"));
     }
@@ -894,6 +892,22 @@
      */
     function init() {
         report.status("Initializing...");
+
+        //d3.select('#myselect').attr('value', 'France');
+        var minDate = new Date(), maxDate = new Date();
+        minDate.setDate(minDate.getDate() - 7);
+        maxDate.setDate(maxDate.getDate() + 14);
+
+        document.getElementById("nav-date").max = maxDate.getUTCFullYear()
+                                                    + "-" +
+                                                    ((maxDate.getUTCMonth() + 1) > 9 ? (maxDate.getUTCMonth() + 1) : "0" + (maxDate.getUTCMonth() + 1))
+                                                    + "-" +
+                                                    ((maxDate.getUTCDate() + 1) > 9 ? (maxDate.getUTCDate() + 1) : "0" + (maxDate.getUTCDate() + 1));
+        document.getElementById("nav-date").min = minDate.getUTCFullYear()
+                                                    + "-" +
+                                                    ((minDate.getUTCMonth() + 1) > 9 ? (minDate.getUTCMonth() + 1) : "0" + (minDate.getUTCMonth() + 1))
+                                                    + "-" +
+                                                    ((minDate.getUTCDate() + 1) > 9 ? (minDate.getUTCDate() + 1) : "0" + (minDate.getUTCDate() + 1));
 
         d3.select("#sponsor-link")
             .attr("target", µ.isEmbeddedInIFrame() ? "_new" : null)
@@ -1109,7 +1123,6 @@
             configuration.save(µ.dateToConfig(next));
         });
         configuration.on("change:date", function() {
-            console.log('CHANGED DATE TO ' + configuration.get("date"));
             var newDate = configuration.get("date");
             var d = newDate == "current" ? new Date() : new Date(newDate);
             

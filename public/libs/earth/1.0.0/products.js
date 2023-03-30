@@ -347,7 +347,7 @@ var products = function() {
                         }
                     },
                     units: [
-                        {label: "cm/s", conversion: function(x) { return x }, precision: 4},
+                        {label: "Pa/s", conversion: function(x) { return x }, precision: 4},
                     ],
                     scale: {
                         bounds: [-1, 1],
@@ -437,7 +437,7 @@ var products = function() {
                         }
                     },
                     units: [
-                        {label: "m/s", conversion: function(x) { return x }, precision: 4},
+                        {label: "cm/s", conversion: function(x) { return x }, precision: 4},
                     ],
                     scale: {
                         bounds: [-40, 40],
@@ -802,8 +802,11 @@ var products = function() {
         var λ0 = header.lo1, φ0 = header.la1;  // the grid's origin (e.g., 0.0E, 90.0N)
         var Δλ = header.dx, Δφ = header.dy;    // distance between grid points (e.g., 2.5 deg lon, 2.5 deg lat)
         var ni = header.nx, nj = header.ny;    // number of grid points W-E and N-S (e.g., 144 x 73)
+
         var date = new Date(header.refTime);
         date.setHours(date.getHours() + header.forecastTime);
+        console.log('buildGrid: date ' + date);
+        console.log('buildGrid: builder ' + JSON.stringify(builder));
 
         // Scan mode 0 assumed. Longitude increases from λ0, and latitude decreases from φ0.
         // http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-4.shtml

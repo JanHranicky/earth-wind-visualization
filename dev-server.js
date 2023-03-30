@@ -129,6 +129,7 @@ function pathFromDate(level,variable,date = null) {
     return path;
 }
 
+
 app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
     console.log(req.params);
 
@@ -196,7 +197,7 @@ app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
  * @param {*} year 
  * @returns 
  */
-async function isForeCast(day,month,year,time,res) {
+function isForeCast(day,month,year,time,res) {
     var date = nc.YYYYMMDDHHToDate(year+month+day,time);
     return date > new Date();
 }
@@ -240,4 +241,4 @@ process.on('SIGUSR2', exitHandler.bind(null, {exit:true}));
 //catches uncaught exceptions
 process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
 
-//open("http://localhost:"+port);
+open("http://localhost:"+port);
