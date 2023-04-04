@@ -65,6 +65,39 @@ var products = function() {
         }
     }
 
+    const asc = arr => arr.sort((a, b) => a - b);
+
+    const sum = arr => arr.reduce((a, b) => a + b, 0);
+
+    const mean = arr => sum(arr) / arr.length;
+    const quantile = (arr, q) => {
+        const sorted = asc(arr);
+        const pos = (sorted.length - 1) * q;
+        const base = Math.floor(pos);
+        const rest = pos - base;
+        if (sorted[base + 1] !== undefined) {
+            return sorted[base] + rest * (sorted[base + 1] - sorted[base]);
+        } else {
+            return sorted[base];
+        }
+    };
+    
+    function adaptScaleToValues(lower,upper) {
+        var step = (upper - lower) / 5;
+        var intervals = [];
+        var colors = [[]]
+        for (let i = 0; i < step; i++) {
+            
+        }
+        return {
+            bounds: [lower, upper],
+            gradient: µ.segmentedColorScale([
+                [lower,     [37, 4, 42]],
+                [upper,     [81, 40, 40]]
+            ])
+        }
+    }
+
     function buildProduct(overrides) {
         return _.extend({
             description: "",
@@ -76,7 +109,17 @@ var products = function() {
             },
             load: function(cancel) {
                 var me = this;
+
                 return when.map(this.paths, µ.loadJson).then(function(files) {
+                    console.log('buildProduct() this.builder.data() ' + JSON.stringify(files[0][0]));
+                    console.log('quantile(data,.10) ' + quantile(files[0][0].data,.10));
+                    console.log('quantile(data,.90) ' + quantile(files[0][0].data,.90));
+                    console.log('this.scale ' + JSON.stringify(me.scale));
+                    me.scale.bounds =  [quantile(files[0][0].data,.10),quantile(files[0][0].data,.90)]
+                    //me.scale = adaptScaleToValues(quantile(files[0][0].data,.10),quantile(files[0][0].data,.90));
+                    //me.scale = µ.extendedSinebowColor(Math.min(quantile(files[0][0].data,.10), quantile(files[0][0].data,.90)));
+                    console.log('this.scale ' + JSON.stringify(me.scale));
+
                     return cancel.requested ? null : _.extend(me, buildGrid(me.builder.apply(me, files)));
                 });
             }
@@ -440,20 +483,10 @@ var products = function() {
                         {label: "cm/s", conversion: function(x) { return x }, precision: 4},
                     ],
                     scale: {
-                        bounds: [-40, 40],
-                        gradient: µ.segmentedColorScale([
-                            [-40,     [37, 4, 42]],
-                            [-30,     [41, 10, 130]],
-                            [-20,     [81, 40, 40]],
-                            [-10,  [192, 37, 149]],  // -40 C/F
-                            [0, [70, 215, 215]],  // 0 F
-                            [10,  [21, 84, 187]],   // 0 C
-                            [20,  [24, 132, 14]],   // just above 0 C
-                            [30,     [247, 251, 59]],
-                            [40,     [235, 167, 21]],
-                            //[0.8,     [230, 71, 39]],
-                            //[1,     [88, 27, 67]]
-                        ])
+                        bounds: [-0.5, 0.5],
+                        gradient: function(v, a) {
+                            return µ.extendedSinebowColor(Math.min(v, 0.2) / 0.2, a);
+                        }
                     }
                 });
             }

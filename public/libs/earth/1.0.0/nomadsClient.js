@@ -27,6 +27,10 @@ module.exports = function() {
                 return "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl?file=gfs.t"+time+"z.pgrb2.0p25.f"+hours+"&lev_"+level+"_mb=on&var_TMP=on&dir=%2Fgfs."+date+"%2F"+time+"%2Fatmos";
             case "vvel":
                 return "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl?file=gfs.t"+time+"z.pgrb2.0p25.f"+hours+"&lev_"+level+"_mb=on&var_VVEL=on&dir=%2Fgfs."+date+"%2F"+time+"%2Fatmos";
+            case "dzdt":
+                return "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl?file=gfs.t"+time+"z.pgrb2.0p25.f"+hours+"&lev_"+level+"_mb=on&var_DZDT=on&dir=%2Fgfs."+date+"%2F"+time+"%2Fatmos";
+            case "hgt":
+                return "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl?file=gfs.t"+time+"z.pgrb2.0p25.f"+hours+"&lev_"+level+"_mb=on&var_HGT=on&dir=%2Fgfs."+date+"%2F"+time+"%2Fatmos";
             default:
                 return "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl?file=gfs.t"+time+"z.pgrb2.0p25.f"+hours+"&lev_"+level+"_mb=on&var_UGRD=on&var_VGRD=on&dir=%2Fgfs."+date+"%2F"+time+"%2Fatmos";
         }
