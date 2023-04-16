@@ -297,8 +297,8 @@ module.exports = function() {
     function findLatestDataUrl(reqDate,date,time,level,variable,cnt,res) {
         console.log('Trying to look for current data url. try num. ' + cnt);
         if (cnt == 0) {
-            res.status(500);
-            res.send("Error while trying to lookup current data url.");
+            res.status(404);
+            res.send("Latstdataurl not found.");
         }
 
         const https = require('https');
@@ -391,8 +391,8 @@ module.exports = function() {
     function downloadForeCastData(hours,reqDate,date,time,level,variable,cnt,res) {
         console.log('downloadForeCastData: hourdiff='+hours);
         if (cnt == 0) {
-            res.status(500);
-            res.send("Error while trying to download forecast data.");
+            res.status(404);
+            res.send("Forecast data not found.");
         }
 
         const https = require('https');

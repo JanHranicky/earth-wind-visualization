@@ -1121,16 +1121,27 @@
             var next = new Date(picked);
             if (hours) next.setHours(hours.substring(0,2));
             configuration.save(µ.dateToConfig(next));
+            console.log('#nav-date ONCHANGE');
         });
         configuration.on("change:date", function() {
             var newDate = configuration.get("date");
             var d = newDate == "current" ? new Date() : new Date(newDate);
             
-            document.getElementById("nav-date").value = d.getUTCFullYear()
+            console.log('NEWDATE = ' + newDate);
+            console.log('d = ' + d);
+            console.log('toISOString ' + d.toISOString().split('T')[0]);
+            console.log('othermethod ' + d.getFullYear().toString()
+            + "-" +
+            ((d.getMonth() + 1) > 9 ? (d.getMonth() + 1).toString() : "0" + (d.getMonth() + 1).toString())
+            + "-" +
+            ((d.getDate()) > 9 ? (d.getDate()).toString() : "0" + (d.getDate()).toString()));
+
+            document.getElementById("nav-date").value = d.getFullYear().toString()
                                                         + "-" +
-                                                        ((d.getUTCMonth() + 1) > 9 ? (d.getUTCMonth() + 1) : "0" + (d.getUTCMonth() + 1))
+                                                        ((d.getMonth() + 1) > 9 ? (d.getMonth() + 1).toString() : "0" + (d.getMonth() + 1).toString())
                                                         + "-" +
-                                                        ((d.getUTCDate() + 1) > 9 ? (d.getUTCDate() + 1) : "0" + (d.getUTCDate() + 1));
+                                                        ((d.getDate()) > 9 ? (d.getDate()).toString() : "0" + (d.getDate()).toString());
+            //document.getElementById("nav-date").value = d.toISOString().split('T')[0];
         });
 
 

@@ -324,7 +324,7 @@ var products = function() {
                     scale: {
                         bounds: [0, 100],
                         gradient: function(v, a) {
-                            return µ.sinebowColor(Math.min(v, 100) / 100, a);
+                            return µ.sinebowColor(Math.min(v, this.bounds[1]) / this.bounds[1], a);
                         }
                     }
                 });
@@ -836,8 +836,12 @@ var products = function() {
         var Δλ = header.dx, Δφ = header.dy;    // distance between grid points (e.g., 2.5 deg lon, 2.5 deg lat)
         var ni = header.nx, nj = header.ny;    // number of grid points W-E and N-S (e.g., 144 x 73)
 
-        var date = new Date(header.refTime);
-        date.setHours(date.getHours() + header.forecastTime);
+        var date;
+        if (builder.date) date = builder.date;
+        else {
+            date = new Date(header.refTime);
+            date.setHours(date.getHours() + header.forecastTime);
+        }
         console.log('buildGrid: date ' + date);
         console.log('buildGrid: builder ' + JSON.stringify(builder));
 

@@ -131,6 +131,7 @@ function pathFromDate(level,variable,date = null) {
 
 
 app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
+    console.log('/data/weather/:year/:month/:day/:file');
     console.log(req.params);
 
     if (req.params.month > 12 || req.params.day > 31) {
@@ -172,7 +173,7 @@ app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
             var variable = fileNameParts[1];
             
             console.log('isForeCast='+isForeCast(req.params.day,req.params.month,req.params.year,time,res));
-            if (!isForeCast(req.params.day,req.params.month,req.params.year,time,res)) nc.downloadAndSaveNomadData(date,time,level,variable,res);
+            if (!isForeCast(req.params.day,req.params.month,req.params.year,time,res)) nc.downloadAndSaveNomadData(date,time,level,variable,res); //TODO osetrit, kdyz bude 404
             else {
                 const MAX_TRIES = 6;
                 var requestDate = nc.YYYYMMDDHHToDate(date,time);
