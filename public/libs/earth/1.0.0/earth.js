@@ -1119,8 +1119,10 @@
             var picked = document.getElementById("nav-date").value;
             var hours = configuration.get("hour");
             var next = new Date(picked);
-            if (hours) next.setHours(hours.substring(0,2));
+            
+            //if (hours) next.setHours(hours.substring(0,2));
             configuration.save(µ.dateToConfig(next));
+            console.log('saved next ' + JSON.stringify(µ.dateToConfig(next)));
             console.log('#nav-date ONCHANGE');
         });
         configuration.on("change:date", function() {

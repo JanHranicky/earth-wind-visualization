@@ -115,7 +115,7 @@ var products = function() {
                     console.log('quantile(data,.10) ' + quantile(files[0][0].data,.10));
                     console.log('quantile(data,.90) ' + quantile(files[0][0].data,.90));
                     console.log('this.scale ' + JSON.stringify(me.scale));
-                    me.scale.bounds =  [quantile(files[0][0].data,.10),quantile(files[0][0].data,.90)]
+                    //me.scale.bounds =  [quantile(files[0][0].data,.10),quantile(files[0][0].data,.90)]
                     //me.scale = adaptScaleToValues(quantile(files[0][0].data,.10),quantile(files[0][0].data,.90));
                     //me.scale = µ.extendedSinebowColor(Math.min(quantile(files[0][0].data,.10), quantile(files[0][0].data,.90)));
                     console.log('this.scale ' + JSON.stringify(me.scale));
@@ -355,7 +355,8 @@ var products = function() {
                         };
                     },
                     units: [
-                        {label: "kg/m³", conversion: function(x) { return x; }, precision: 2}
+                        {label: "kg/m³", conversion: function(x) { return x; }, precision: 3},
+                        {label: "g/m³", conversion: function(x) { return 1000*x; }, precision: 1}
                     ],
                     scale: {
                         bounds: [0, 1.5],
@@ -393,20 +394,10 @@ var products = function() {
                         {label: "Pa/s", conversion: function(x) { return x }, precision: 4},
                     ],
                     scale: {
-                        bounds: [-1, 1],
-                        gradient: µ.segmentedColorScale([
-                            [-1,     [37, 4, 42]],
-                            //[-0.8,     [41, 10, 130]],
-                            [-0.6,     [81, 40, 40]],
-                            //[-0.4,  [192, 37, 149]],  // -40 C/F
-                            [-0.2, [70, 215, 215]],  // 0 F
-                            //[0,  [21, 84, 187]],   // 0 C
-                            [0.2,  [24, 132, 14]],   // just above 0 C
-                            //[0.4,     [247, 251, 59]],
-                            [0.6,     [235, 167, 21]],
-                            //[0.8,     [230, 71, 39]],
-                            [1,     [88, 27, 67]]
-                        ])
+                        bounds: [0, 100],
+                        gradient: function(v, a) {
+                            return µ.extendedSinebowColor(Math.min(v, this.bounds[1]) / this.bounds[1], a);
+                        }
                     }
                 });
             }
@@ -438,19 +429,19 @@ var products = function() {
                         {label: "gpm", conversion: function(x) { return x }, precision: 4},
                     ],
                     scale: {
-                        bounds: [-20, 20],
+                        bounds: [0, 200],
                         gradient: µ.segmentedColorScale([
-                            [-20,     [37, 4, 42]],
-                            //[-0.8,     [41, 10, 130]],
-                            [-10,     [81, 40, 40]],
-                            //[-0.4,  [192, 37, 149]],  // -40 C/F
-                            [0, [70, 215, 215]],  // 0 F
-                            //[0,  [21, 84, 187]],   // 0 C
-                            [10,  [24, 132, 14]],   // just above 0 C
-                            //[0.4,     [247, 251, 59]],
-                            [20,     [235, 167, 21]],
-                            //[0.8,     [230, 71, 39]],
-                            //[1,     [88, 27, 67]]
+                            [0,     [37, 4, 42]],
+                            [20,     [41, 10, 130]],
+                            [40,     [81, 40, 40]],
+                            [60,  [192, 37, 149]],  // -40 C/F
+                            [80, [70, 215, 215]],  // 0 F
+                            [100,  [21, 84, 187]],   // 0 C
+                            [120,  [24, 132, 14]],   // just above 0 C
+                            [140,     [247, 251, 59]],
+                            [160,     [235, 167, 21]],
+                            [180,     [230, 71, 39]],
+                            [200,     [88, 27, 67]]
                         ])
                     }
                 });

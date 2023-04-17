@@ -94,6 +94,7 @@ module.exports = function() {
                     toJSON(dest,res,isAirDensity);
                 }).on('error', function(err) { // Handle errors
                     fs.unlink(dest); // Delete the file async. (But we don't check the result)
+                    
                     res.status(500);
                     res.send("Error while saving the file to the disk: " + err.message);
                 });
