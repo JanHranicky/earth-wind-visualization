@@ -60,6 +60,7 @@ module.exports = function() {
         return fileName;
     }
 
+
     /**
      * Tries to download data based on date, time and level form NOMAD's server.
      * If the download is sucessful the data is parsed into JSON format using grib2json utility 
@@ -71,7 +72,14 @@ module.exports = function() {
      * @param {String} variable 
      * @param {*} res Express response object of the /download endpoint request 
      */
-    function downloadAndSaveNomadData(date,time,level,variable,res) {  
+    function downloadAndSaveNomadData(date,time,level,variable,res,cnt) {
+        console.log('downloadAndSaveNomadData() cnt=' + cnt);
+        if (cnt == 0) {
+            res.status(404);
+            res.send("Data not found");
+            return;
+        }
+
         const https = require('https');
         const fs = require('fs');
 
@@ -100,8 +108,8 @@ module.exports = function() {
                 });
                 
             } else {
-                res.status(response.statusCode == 404 ? 404 : 500);
-                res.send("Error while sending Nomad request. Nomad responded with code: "+response.statusCode);
+                var dateTimeObj = getPreviousStep(date,time);
+                downloadAndSaveNomadData(dateTimeObj.date,dateTimeObj.time,level,variable,res,cnt--);
             }
         });
     }
@@ -284,7 +292,8 @@ module.exports = function() {
             }
         });
     }
-
+    
+    const FORECAST_TRIES = 6;
     /**
      * Tries to find the latest data url, if it is found another function that tries to download forecast data is called.
      * @param {*} reqDate 
@@ -297,9 +306,10 @@ module.exports = function() {
      */
     function findLatestDataUrl(reqDate,date,time,level,variable,cnt,res) {
         console.log('Trying to look for current data url. try num. ' + cnt);
-        if (cnt == 0) {
+        if (cnt == 0 && !tryLastInterval) {
             res.status(404);
             res.send("Latstdataurl not found.");
+            return;
         }
 
         const https = require('https');
@@ -313,9 +323,8 @@ module.exports = function() {
         const request = https.get(downloadUrl, function(response) {
             console.log(response.statusCode);
             if (response.statusCode == 200) {
-                const FORECAST_TRIES = 6;
                 var hours = hourDiff(reqDate,YYYYMMDDHHToDate(date,time));
-                downloadForeCastData(hours,reqDate,date,time.slice(0,2),level,variable,FORECAST_TRIES,res);
+                downloadForeCastData(hours,reqDate,date,time.slice(0,2),level,variable,FORECAST_TRIES,res,true);
             } else if (response.statusCode == 404) { //Current data is not yet published, Download 6hr older data
                 var dateTimeObj = getPreviousStep(date,time);
                 cnt -= 1;
@@ -389,11 +398,20 @@ module.exports = function() {
         };
     }
 
-    function downloadForeCastData(hours,reqDate,date,time,level,variable,cnt,res) {
+    function downloadForeCastData(hours,reqDate,date,time,level,variable,cnt,res,tryLastInterval) {
         console.log('downloadForeCastData: hourdiff='+hours);
-        if (cnt == 0) {
+        console.log('downloadForeCastData: cnt='+cnt);
+        console.log('downloadForeCastData: tryLastInterval='+tryLastInterval);
+
+        if (cnt == 0 && !tryLastInterval) {
             res.status(404);
             res.send("Forecast data not found.");
+            return;
+        } else if (cnt == 0 && tryLastInterval) {
+            hours += FORECAST_TRIES;
+            var objDateTime = getPreviousStep(date,time);
+            downloadForeCastData(hours,reqDate,objDateTime.date,objDateTime.time,level,variable,FORECAST_TRIES,res,false); //tries one more time on the older interval
+            return;
         }
 
         const https = require('https');
@@ -426,7 +444,7 @@ module.exports = function() {
             } else if (response.statusCode == 404) { //Current data is not yet published, Download 6hr older data
                 cnt -= 1;
                 hours -= 1;
-                downloadForeCastData(hours,reqDate,date,time,level,variable,cnt,res);
+                downloadForeCastData(hours,reqDate,date,time,level,variable,cnt,res,tryLastInterval);
             } else {
                 res.status(500);
                 res.send("Error while sending Nomad request. Nomad responded with code: "+response.statusCode);

@@ -152,8 +152,7 @@ app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
 
                     res.status(500);
                     res.send('Err while sending data file ' + err);
-                }
-                else {
+                } else {
                     console.log('OK');
 
                     res.status(200);
@@ -173,7 +172,7 @@ app.get('/data/weather/:year/:month/:day/:file', (req, res) => {
             var variable = fileNameParts[1];
             
             console.log('isForeCast='+isForeCast(req.params.day,req.params.month,req.params.year,time,res));
-            if (!isForeCast(req.params.day,req.params.month,req.params.year,time,res)) nc.downloadAndSaveNomadData(date,time,level,variable,res); //TODO osetrit, kdyz bude 404
+            if (!isForeCast(req.params.day,req.params.month,req.params.year,time,res)) nc.downloadAndSaveNomadData(date,time,level,variable,res,2); //TODO osetrit, kdyz bude 404
             else {
                 const MAX_TRIES = 6;
                 var requestDate = nc.YYYYMMDDHHToDate(date,time);
@@ -242,4 +241,4 @@ process.on('SIGUSR2', exitHandler.bind(null, {exit:true}));
 //catches uncaught exceptions
 process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
 
-open("http://localhost:"+port);
+//open("http://localhost:"+port);
