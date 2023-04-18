@@ -129,18 +129,9 @@ var products = function() {
                 var me = this;
 
                 return when.map(this.paths, µ.loadJson).then(function(files) {
-                    if (me.type == "dzdt") files[0][0].data.forEach(item => { item = item * 100; });
+                    if (me.type == "dzdt") files[0][0].data.forEach(item => { item = item * 100; }); //scale dzdt vaulues
+                    if (me.type != "wind") me.scale = adaptScaleToValues(files[0][0].data); //adapt scale, except for wind
 
-                    //console.log('buildProduct() this.builder.data() ' + JSON.stringify(files[0][0]));
-                    //console.log('quantile(data,.10) ' + quantile(files[0][0].data,.10));
-                    //console.log('quantile(data,.90) ' + quantile(files[0][0].data,.90));
-                    //console.log('this.scale ' + JSON.stringify(me.scale));
-                    //me.scale.bounds =  [quantile(files[0][0].data,.10),quantile(files[0][0].data,.90)]
-                    //me.scale = adaptScaleToValues(quantile(files[0][0].data,.10),quantile(files[0][0].data,.90));
-                    //me.scale = µ.extendedSinebowColor(Math.min(quantile(files[0][0].data,.10), quantile(files[0][0].data,.90)));
-                    console.log('this.scale ' + JSON.stringify(me.scale));
-                    me.scale = adaptScaleToValues(files[0][0].data);
-                    console.log('me.type ' + me.type);
                     return cancel.requested ? null : _.extend(me, buildGrid(me.builder.apply(me, files)));
                 });
             }
