@@ -82,7 +82,8 @@ var products = function() {
         }
     };
     
-    function adaptScaleToValues(lower,upper) {
+    function adaptScaleToValues(data) {
+        /*
         var step = (upper - lower) / 5;
         var intervals = [];
         var colors = [[]]
@@ -94,6 +95,23 @@ var products = function() {
             gradient: µ.segmentedColorScale([
                 [lower,     [37, 4, 42]],
                 [upper,     [81, 40, 40]]
+            ])
+        }
+        */
+        return {
+            bounds: [quantile(data,.10), quantile(data,.90)],
+            gradient: µ.segmentedColorScale([
+                [quantile(data,.10),     [37, 4, 42]],
+                [quantile(data,.20),     [41, 10, 130]],
+                [quantile(data,.30),     [81, 40, 40]],
+                [quantile(data,.40),  [192, 37, 149]],  
+                [quantile(data,.50), [70, 215, 215]],  
+                [quantile(data,.60),  [21, 84, 187]],   
+                [quantile(data,.70),  [24, 132, 14]],   
+                [quantile(data,.80),     [247, 251, 59]],
+                [quantile(data,.90),     [235, 167, 21]],
+                //[quantile(data,.10),     [230, 71, 39]],
+                //[quantile(data,.10),     [88, 27, 67]]
             ])
         }
     }
@@ -111,15 +129,18 @@ var products = function() {
                 var me = this;
 
                 return when.map(this.paths, µ.loadJson).then(function(files) {
-                    console.log('buildProduct() this.builder.data() ' + JSON.stringify(files[0][0]));
-                    console.log('quantile(data,.10) ' + quantile(files[0][0].data,.10));
-                    console.log('quantile(data,.90) ' + quantile(files[0][0].data,.90));
-                    console.log('this.scale ' + JSON.stringify(me.scale));
+                    if (me.type == "dzdt") files[0][0].data.forEach(item => { item = item * 100; });
+
+                    //console.log('buildProduct() this.builder.data() ' + JSON.stringify(files[0][0]));
+                    //console.log('quantile(data,.10) ' + quantile(files[0][0].data,.10));
+                    //console.log('quantile(data,.90) ' + quantile(files[0][0].data,.90));
+                    //console.log('this.scale ' + JSON.stringify(me.scale));
                     //me.scale.bounds =  [quantile(files[0][0].data,.10),quantile(files[0][0].data,.90)]
                     //me.scale = adaptScaleToValues(quantile(files[0][0].data,.10),quantile(files[0][0].data,.90));
                     //me.scale = µ.extendedSinebowColor(Math.min(quantile(files[0][0].data,.10), quantile(files[0][0].data,.90)));
                     console.log('this.scale ' + JSON.stringify(me.scale));
-
+                    me.scale = adaptScaleToValues(files[0][0].data);
+                    console.log('me.type ' + me.type);
                     return cancel.requested ? null : _.extend(me, buildGrid(me.builder.apply(me, files)));
                 });
             }
@@ -827,14 +848,17 @@ var products = function() {
         var Δλ = header.dx, Δφ = header.dy;    // distance between grid points (e.g., 2.5 deg lon, 2.5 deg lat)
         var ni = header.nx, nj = header.ny;    // number of grid points W-E and N-S (e.g., 144 x 73)
 
-        var date;
+        var date,dataDate;
         if (builder.date) date = builder.date;
         else {
             date = new Date(header.refTime);
             date.setHours(date.getHours() + header.forecastTime);
         }
+        dataDate = new Date(header.refTime);
+        dataDate.setHours(date.getHours() + header.forecastTime);
+
         console.log('buildGrid: date ' + date);
-        console.log('buildGrid: builder ' + JSON.stringify(builder));
+        console.log('buildGrid: dataDate ' + dataDate);
 
         // Scan mode 0 assumed. Longitude increases from λ0, and latitude decreases from φ0.
         // http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-4.shtml
@@ -888,6 +912,7 @@ var products = function() {
         return {
             source: dataSource(header),
             date: date,
+            dataDate: dataDate,
             interpolate: interpolate,
             forEachPoint: function(cb) {
                 for (var j = 0; j < nj; j++) {

@@ -716,23 +716,27 @@
         var parts = configuration.get("date").split("/");  // yyyy/mm/dd or "current"
         var hhmm = configuration.get("hour");
 
-        var returnVal = parts.length > 1 ?
-        Date.UTC(+parts[0], parts[1] - 1, +parts[2], +hhmm.substring(0, 2)) :
-        parts[0] === "current" ? now : null;
-
         return parts.length > 1 ?
             Date.UTC(+parts[0], parts[1] - 1, +parts[2], +hhmm.substring(0, 2)) :
             parts[0] === "current" ? now : null;
     }
 
+
     /**
      * Display the grid's validity date in the menu. Allow toggling between local and UTC time.
      */
     function showDate(grids) {
+        if (grids && grids.primaryGrid) console.log('showDate datadate = ' + grids.primaryGrid.dataDate);
         var date = new Date(validityDate(grids)), isLocal = d3.select("#data-date").classed("local");
         var formatted = isLocal ? µ.toLocalISO(date) : µ.toUTCISO(date);
         d3.select("#data-date").text(formatted + " " + (isLocal ? "Local" : "UTC"));
         d3.select("#toggle-zone").text("⇄ " + (isLocal ? "UTC" : "Local"));
+        
+        if (!grids || !grids.primaryGrid) return;
+        var date = new Date(grids.primaryGrid.dataDate);
+        var formatted = µ.toUTCISO(date);
+        d3.select("#actual-date").text(formatted + " UTC");
+        
     }
 
     /**
