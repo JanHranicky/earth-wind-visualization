@@ -129,7 +129,7 @@ var products = function() {
                 var me = this;
 
                 return when.map(this.paths, µ.loadJson).then(function(files) {
-                    if (me.type == "dzdt") files[0][0].data.forEach(item => { item = item * 100; }); //scale dzdt vaulues
+
                     if (me.type != "wind") me.scale = adaptScaleToValues([...files[0][0].data]); //adapt scale, except for wind
 
                     return cancel.requested ? null : _.extend(me, buildGrid(me.builder.apply(me, files)));
