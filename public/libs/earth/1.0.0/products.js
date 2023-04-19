@@ -483,7 +483,7 @@ var products = function() {
                         }
                     },
                     units: [
-                        {label: "cm/s", conversion: function(x) { return x }, precision: 4},
+                        {label: "cm/s", conversion: function(x) { return 100*x }, precision: 4},
                     ],
                     scale: {
                         bounds: [-0.5, 0.5],
