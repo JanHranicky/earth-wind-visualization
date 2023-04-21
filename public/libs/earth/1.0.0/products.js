@@ -81,7 +81,25 @@ var products = function() {
             return sorted[base];
         }
     };
-    
+
+    function adaptScaleToValuesDivergentColors(data) {
+        const a = quantile(data,.001)
+        const b = quantile(data,.999)
+
+
+        return {
+            bounds: [a, b],
+            gradient: µ.segmentedColorScale([
+                [a,     [0, 0, 255]],
+
+                [0,     [255, 255, 255]],
+
+
+                [b,     [255, 0, 0]],
+
+            ])
+        }
+    }
     function adaptScaleToValues(data) {
         /*
         var step = (upper - lower) / 5;
@@ -98,18 +116,30 @@ var products = function() {
             ])
         }
         */
+        const a = quantile(data,.000001)
+        const b = quantile(data,.999999)
+        const n=11
+        const subIntervalLength = (b - a) / n;
+        const middleValues = [];
+        for (let i = 0; i < n; i++) {
+            const subIntervalStart = a + i * subIntervalLength;
+            const subIntervalEnd = subIntervalStart + subIntervalLength;
+            const middleValue = (subIntervalStart + subIntervalEnd) / 2;
+            middleValues.push(middleValue);}
+
         return {
-            bounds: [quantile(data,.10), quantile(data,.90)],
+            bounds: [a, b],
             gradient: µ.segmentedColorScale([
-                [quantile(data,.10),     [37, 4, 42]],
-                [quantile(data,.20),     [41, 10, 130]],
-                [quantile(data,.30),     [81, 40, 40]],
-                [quantile(data,.40),  [192, 37, 149]],  
-                [quantile(data,.50), [70, 215, 215]],  
-                [quantile(data,.60),  [21, 84, 187]],   
-                [quantile(data,.70),  [24, 132, 14]],   
-                [quantile(data,.80),     [247, 251, 59]],
-                [quantile(data,.90),     [235, 167, 21]],
+                [middleValues[0],     [37, 4, 42]],
+                [middleValues[1],     [41, 10, 130]],
+                [middleValues[2],     [81, 40, 40]],
+                [middleValues[3],  [192, 37, 149]],
+                [middleValues[4], [70, 215, 215]],
+                [middleValues[5],  [21, 84, 187]],
+                [middleValues[6],  [24, 132, 14]],
+                [middleValues[7],     [247, 251, 59]],
+                [middleValues[8],     [255, 154, 0]],
+                [middleValues[9],     [255, 0, 0]],
                 //[quantile(data,.10),     [230, 71, 39]],
                 //[quantile(data,.10),     [88, 27, 67]]
             ])
@@ -130,8 +160,11 @@ var products = function() {
 
                 return when.map(this.paths, µ.loadJson).then(function(files) {
 
-                    if (me.type != "wind") me.scale = adaptScaleToValues([...files[0][0].data]); //adapt scale, except for wind
-
+                    if (me.type == "temp") me.scale = adaptScaleToValues([...files[0][0].data]); //adapt scale, except for wind
+                    if (me.type == "air_density") me.scale = adaptScaleToValues([...files[0][0].data])
+                    if (me.type == "hgt") me.scale = adaptScaleToValues([...files[0][0].data])
+                    if (me.type == "vvel") me.scale = adaptScaleToValuesDivergentColors([...files[0][0].data])
+                    if (me.type == "dzdt") me.scale = adaptScaleToValuesDivergentColors([...files[0][0].data])
                     return cancel.requested ? null : _.extend(me, buildGrid(me.builder.apply(me, files)));
                 });
             }
@@ -846,7 +879,7 @@ var products = function() {
             date.setHours(date.getHours() + header.forecastTime);
         }
         dataDate = new Date(header.refTime);
-        dataDate.setHours(dataDate.getHours() + header.forecastTime);
+        dataDate.setHours(date.getHours() + header.forecastTime);
 
         console.log('buildGrid: date ' + date);
         console.log('buildGrid: dataDate ' + dataDate);
