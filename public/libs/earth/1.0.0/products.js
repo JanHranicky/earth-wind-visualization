@@ -879,7 +879,7 @@ var products = function() {
             date.setHours(date.getHours() + header.forecastTime);
         }
         dataDate = new Date(header.refTime);
-        dataDate.setHours(date.getHours() + header.forecastTime);
+        dataDate.setHours(dataDate.getHours() + header.forecastTime);
 
         console.log('buildGrid: date ' + date);
         console.log('buildGrid: dataDate ' + dataDate);
