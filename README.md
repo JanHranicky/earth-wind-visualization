@@ -1,54 +1,29 @@
+# O projektu
 
-building and launching
-----------------------
+Projekt vizualizuje data ..
 
-After installing node.js and npm, clone "earth" and install dependencies:
+# Prerekvizity a spuštění 
 
-    git clone https://github.com/cambecc/earth
-    cd earth
-    npm install
+## Java
+V projektu je využita utilita grib2json, pro konverzi meteorologických dat do formátu json. Pro fungování této utility je vyžadováno nainstalovat Javu. Tu lze stáhnout a naistalovat z odkazu:
 
-Next, launch the development web server:
+http://www.java.com
 
-    node dev-server.js 8080
+Instalaci Javy lze ověřit následujícím příkazem do příkazového řádku (ten lze spustit start -> příkazový řádek):
 
-Finally, point your browser to:
+    java --version
 
-    http://localhost:8080
+Jestliže je Java nainstalována měl by výstup příkazu vypadat následovně:
 
-The server acts as a stand-in for static S3 bucket hosting and so contains almost no server-side logic. It
-serves all files located in the `earth/public` directory. See `public/index.html` and `public/libs/earth/*.js`
-for the main entry points. Data files are located in the `public/data` directory, and there is one sample
-weather layer located at `data/weather/current`.
+    java 19.0.1 2022-10-18 \
+    Java(TM) SE Runtime Environment (build 19.0.1+10-21) \
+    Java HotSpot(TM) 64-Bit Server VM (build 19.0.1+10-21, mixed mode, sharing)
+  
+## Spuštění
+Po instalaci Javy lze projekt spustit jednoduše pomocí příslušeného spustitelného souboru v kořenové složce projektu. Jsou k dispozici tři spustitelné soubory, v závislosti na opračním systému:
 
-*For Ubuntu, Mint, and elementary OS, use `nodejs` instead of `node` instead due to a [naming conflict](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager#ubuntu-mint-elementary-os).
+    earth-macos - macOS
+    earth-win.exe - Windows
+    earth-linux - Linux
 
-
-implementation notes
---------------------
-
-Building this project required solutions to some interesting problems. Here are a few:
-
-   * The GFS grid has a resolution of 1°. Intermediate points are interpolated in the browser using [bilinear
-     interpolation](http://en.wikipedia.org/wiki/Bilinear_interpolation). This operation is quite costly.
-   * Each type of projection warps and distorts the earth in a particular way, and the degree of distortion must
-     be calculated for each point (x, y) to ensure wind particle paths are rendered correctly. For example,
-     imagine looking at a globe where a wind particle is moving north from the equator. If the particle starts
-     from the center, it will trace a path straight up. However, if the particle starts from the globe's edge,
-     it will trace a path that curves toward the pole. [Finite difference approximations](http://gis.stackexchange.com/a/5075/23451)
-     are used to estimate this distortion during the interpolation process.
-   * The SVG map of the earth is overlaid with an HTML5 Canvas, where the animation is drawn. Another HTML5
-     Canvas sits on top and displays the colored overlay. Both canvases must know where the boundaries of the
-     globe are rendered by the SVG engine, but this pixel-for-pixel information is difficult to obtain directly
-     from the SVG elements. To workaround this problem, the globe's bounding sphere is re-rendered to a
-     detached Canvas element, and the Canvas' pixels operate as a mask to distinguish points that lie outside
-     and inside the globe's bounds.
-   * Most configuration options are persisted in the hash fragment to allow deep linking and back-button
-     navigation. I use a [backbone.js Model](http://backbonejs.org/#Model) to represent the configuration.
-     Changes to the model persist to the hash fragment (and vice versa) and trigger "change" events which flow to
-     other components.
-   * Components use [backbone.js Events](http://backbonejs.org/#Events) to trigger changes in other downstream
-     components. For example, downloading a new layer produces a new grid, which triggers reinterpolation, which
-     in turn triggers a new particle animator. Events flow through the page without much coordination,
-     sometimes causing visual artifacts that (usually) quickly disappear.
-   * There's gotta be a better way to do this. Any ideas?
+Po spuštění se otevře okno s příkazovým řádkem, které zobrazuje komunikaci se serverem. Automaticky se taky otevře okno defaultního prohlížeče, ve kterém se zobrazí samotný výstup z aplikace. Při zavření okna s příkazovým řádkem se uzavře spojení se serverem a aplikace v prohlížeči tak přestane reagovat. 
