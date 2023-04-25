@@ -1,6 +1,7 @@
 # O projektu
 
-Projekt vizualizuje data ..
+Projekt vizualizuje data globálního numerického modelu GFS. Projekt vizualizuje následující proměnné: rychlost větru, teplotu, vertikální rychlost v Pa/s (VVEL), vertikální rychlost v cm/s (DZDT), geopotenciální výšku a hustotu vzduchu. Vizualizace umožňuje výběr z několika tlakových hladin: 1000, 850, 700, 500, 250, 70 a 50 hPa.
+Lze zobrazit jak současný stav atmosféry, tak vývoj několik dní do minulosti a předpověď na 10 dní dopředu.
 
 # Prerekvizity a spuštění 
 
